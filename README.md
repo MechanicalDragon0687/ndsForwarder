@@ -1,5 +1,12 @@
 # NDSForwarder
 
+This app will create nds forwarders and install them to the home screen of the 3ds.
+
+The forwarders created with this app work in conjunction with the nds-boostrap forwarder pack for SD cards [here](https://www.dropbox.com/s/k5uaa4jzbtkgm0z/DS%20Game%20Forwarder%20pack%20%283DS%20SD%20Card%29.7z?dl=1).  Read more about it on the [GBATemp page](https://gbatemp.net/threads/nds-forwarder-cias-for-your-home-menu.426174/)
+ 
+###### this takes the place of the Forwarder3-DS java app listed on the gbatemp page
+
+
 DSiWare Template downloaded from http://olmectron.github.io/forwarders/sdcard.(fwd|nds). Thanks to Olmectron for providing templates via their website.
 
 Thanks to Martin Korth for GBATek, which provided pretty much all the information needed about the nds and dsi formats.
