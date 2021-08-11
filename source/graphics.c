@@ -26,16 +26,10 @@ void drawPanelWithTitle(float x, float y, float z, float width, float height, fl
     C2D_TextOptimize(&text);
     C2D_DrawText(&text, C2D_WithColor ,x+width/10,y+(TITLE_HEIGHT/2)-textheight/2,z,0.67,0.67,fontColor);
     C2D_TextBufDelete(buf);
-    // C2DExtra_DrawRectHollow(x+border-1,y+border-1,2+width-border*2,2+50-border*2,3,DARKEN(color));
-    // C2DExtra_DrawRectHollow(x,y,width,height,3,DARKEN(color) );
 }
 void drawPanel(float x, float y, float z, float width, float height, float border, u32 bgColor, u32 color) {
-    //C2D_DrawRectSolid(x,y,0,width,50,color);
     C2D_DrawRectSolid(x,y,z,width,height,bgColor);
     C2DExtra_DrawRectHollow(x,y,z,width,height,border,color);
-    
-    // C2DExtra_DrawRectHollow(x+border-1,y+border-1,2+width-border*2,2+50-border*2,3,DARKEN(color));
-    // C2DExtra_DrawRectHollow(x,y,width,height,3,DARKEN(color) );
 }
 
 void C2DExtra_DrawRectHollow(float x, float y, float z, float width, float height, float thickness, u32 color) {

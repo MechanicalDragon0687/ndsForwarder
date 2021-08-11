@@ -40,14 +40,9 @@ void convertIconToBmp(u16* bmp, tNDSBanner* banner ) {
 	u16 colors[16]={0};
      for (u8 x=0;x<16;x++) {
          colors[x] = RGB5A1_BGR5A1(banner->palette[x]);
-        //u16 color=banner->palette[x];
-        // colors[x][2]=(color & 0b11111) << 3;
-        // colors[x][1]=((color >> 5) & 0b11111) << 3;
-        // colors[x][0]=((color >> 10) & 0b11111) << 3;
      }
 	for (u32 x=0;x<0x400;x++) {
 		memcpy(bmp+(x),&colors[store[x]],2);
-//		printf("%d|",store[x]);
 	}
 	return;
 }
@@ -69,7 +64,6 @@ Result LoadIconFromNDS(const char* filename, u16* output) {
     tNDSHeader* header = malloc(sizeof(tNDSHeader));
 	tNDSBanner* banner=malloc(sizeof(tNDSBanner));
 
-	//Initialize console on top screen. Using NULL as the second argument tells the console library to use the internal console structure as current one
 	 fread(header,sizeof(tNDSHeader),1,f);
 	 if (header->bannerOffset > 0) {
 	 	fseek(f,header->bannerOffset,SEEK_SET);

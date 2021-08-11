@@ -34,19 +34,10 @@ void memcpyrev(void* dest, void* source, u32 size) {
     }
 }
 Result sign(u8* hash, u8* mod, u32 modSize, u8* exp, u32 expSize, u8* signature) {
- psRSAContext ctx({.rsa_bitsize=2048});
- memcpy(ctx.exponent,exp,expSize);
- memcpy(ctx.modulo,exp,modSize);
- 
-//  ctx.exponent = exp;
-//  ctx.modulo=mod;
- //ctx.rsa_bitsize = 2048;
-// u8 	modulo [0x100]
-// u8 	exponent [0x100]
-// u32 	rsa_bitsize
-// u32 	unk
-
-    return PS_SignRsaSha256(hash,&ctx,signature);
+  psRSAContext ctx({.rsa_bitsize=2048});
+  memcpy(ctx.exponent,exp,expSize);
+  memcpy(ctx.modulo,exp,modSize);
+  return PS_SignRsaSha256(hash,&ctx,signature);
 }
 
 void encryptAES128CBC(u8* out, u8* iv, u8* key, u8* data, u32 size) {

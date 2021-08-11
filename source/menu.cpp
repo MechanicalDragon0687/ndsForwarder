@@ -34,7 +34,6 @@ extern "C" {
     }
 
 
-//class Menu {
     Menu::~Menu() {
         for ( auto item : this->entries ) delete item;
         this->entries.clear();
@@ -80,7 +79,10 @@ extern "C" {
         bool ndsFilesVisible=false;
         for (const auto & entry : std::filesystem::directory_iterator(path)) {
             std::string filename = entry.path().filename();
-            if (filename[0]=='.' || !(strcasecmp(entry.path().extension().c_str(),".nds")==0 || entry.is_directory()))
+            if (
+                filename[0]=='.' || 
+                !(strcasecmp(entry.path().extension().c_str(),".nds")==0 || entry.is_directory())
+            )
                 continue;
             MenuSelection* menuEntry = new MenuSelection();
             menuEntry->path=entry.path();
@@ -196,11 +198,6 @@ extern "C" {
                                 swkbdSetFeatures(&kbstate,SWKBD_MULTILINE | SWKBD_DEFAULT_QWERTY);
                                 swkbdInputText(&kbstate,customTitleBuffer,0x51);
                                 customTitle=std::string(customTitleBuffer);
-                                // if (customTitle.empty()) {
-                                //     Dialog(target,0,0,320,240,{"Not using a custom title"},{"OK"}).handle();
-                                // }else{ 
-                                //     Dialog(target,0,0,320,240,{"Setting custom name to:",customTitle},{"OK"}).handle();
-                                // }
                             }
                             buildResult = builder->buildCIA(entry.path.generic_string(),config->randomTID,customTitle);
                         } else {
@@ -222,7 +219,6 @@ extern "C" {
                                 continue;
                             std::string shortname = dEntry.path().filename().generic_string();
                             Dialog(target,0,0,320,240,{"Installing",shorten(dEntry.path().filename().generic_string(),25)},{},0).handle();
-                            //Result res = builder->buildCIA(dEntry.path().generic_string(),(config!=nullptr)?config->randomTID:false);
                             Result buildResult = 0;
                             if (config!=nullptr) {
                                 std::string customTitle="";
@@ -234,11 +230,6 @@ extern "C" {
                                     swkbdSetFeatures(&kbstate,SWKBD_MULTILINE | SWKBD_DEFAULT_QWERTY);
                                     swkbdInputText(&kbstate,customTitleBuffer,0x51);
                                     customTitle=std::string(customTitleBuffer);
-                                    // if (customTitle.empty()) {
-                                    //     Dialog(target,0,0,320,240,{"Not using a custom title"},{"OK"}).handle();
-                                    // }else{ 
-                                    //     Dialog(target,0,0,320,240,{"Setting custom name to:",customTitle},{"OK"}).handle();
-                                    // }
                                 }
                                 buildResult = builder->buildCIA(dEntry.path().generic_string(),config->randomTID,customTitle);
                             } else {

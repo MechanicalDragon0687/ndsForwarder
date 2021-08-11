@@ -60,7 +60,6 @@ Result Builder::initialize() {
                 u32 size = offsetSizePairs.at(i+1);
                 FSFILE_Read (hFile, &readCount, offset, buf, size);
                 certParts[offset]=std::string(buf,size);
-                //ciacert.append(buf,size);
             }
             this->ciaCertChain=certParts[0xc10]+certParts[0x3a00]+certParts[0x3f10]+certParts[0x3c10];
             this->ticketCertChain=certParts[0x3f10]+certParts[0xc10]+certParts[0x3a00];
@@ -82,7 +81,6 @@ Result Builder::initialize() {
 }
 std::string Builder::buildSRL(std::string filename, bool randomTid, std::string customTitle) {
     if (filename.size() > this->launchPathLen) {
-        //return (MAKERESULT(RL_PERMANENT,RS_INVALIDARG,RM_SDMC,RD_TOO_LARGE));
         return "";
     }
     //TODO Load nds file
@@ -106,19 +104,16 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     f.seekg(header.bannerOffset);
     f.read((char*)&banner,sizeof(banner));
     if ((banner.version & 0xFF) > 1) {
-        //TODO: copy chinese title
         f.read(extraTitles[0],0x100);
     }else{
         memcpy(extraTitles[0],(u8*)&banner.titles[0],0x100);
     }
     if ((banner.version & 0xFF) > 2) {
-        //TODO: copy korean title
         f.read(extraTitles[0],0x100);
     }else{
         memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
     }
     if ((banner.version & 0x100) > 0) {
-        //TODO: copy animated banner
         f.seekg(header.bannerOffset+0x1240);
         f.read(animatedIconData,0x1180);
     }
@@ -130,19 +125,16 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         std::ifstream f(customBannerFilename);
         f.read((char*)&banner,sizeof(banner));
         if ((banner.version & 0xFF) > 1) {
-            //TODO: copy chinese title
             f.read(extraTitles[0],0x100);
         }else{
             memcpy(extraTitles[0],(u8*)&banner.titles[0],0x100);
         }
         if ((banner.version & 0xFF) > 2) {
-            //TODO: copy korean title
             f.read(extraTitles[0],0x100);
         }else{
             memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
         }
         if ((banner.version & 0x100) > 0) {
-            //TODO: copy animated banner
             f.seekg(0x1240);
             f.read(animatedIconData,0x1180);
         }
@@ -236,13 +228,6 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
     // GET RANDOM CONTENT ID
     u8 contentID[4]={0x00,0x02,0x03,0x04};
     PS_GenerateRandomBytes(contentID+1,3);
-    // srand(svcGetSystemTick());
-    // u16 randnum[0x8];
-    // for (int x = 1;x<8;x++)
-    //     randnum[x] = ((rand() % 255) <<8) + (rand()%255);
-	// memcpy(contentID,sha256((u8*)randnum,16).c_str(),0x4);
-
-
 
     this->sections["content"] = buildSRL(filename, randomTid, customTitle);
 	std::string srlSha = sha256( (u8*)this->sections["content"].c_str(), this->sections["content"].size());
@@ -351,7 +336,6 @@ std::string Builder::buildTMD(u8* contentId) {
     memcpy(tmd.signatureIssuer,issuer,26);
     tmd.version=1;
     readTWLTID(tmd.titleId,this->sections["content"].c_str());
-//    memcpy(tmd.titleId,this->getTWLTID((u8*)this->sections["content"].c_str()).c_str(),8); // title id
     tmd.titleType[0x3]=0x40; // title type: CTR
     memcpy(tmd.saveDataSizeLE +0x5A,this->sections["content"].c_str()+0x238,4); // will always be 0 unless template changes
     memcpy(tmd.privateSaveDataSizeLE,this->sections["content"].c_str()+0x23C,4); // will always be 0 unless template changes
@@ -419,7 +403,6 @@ void Builder::parseTemplate(std::string path) {
             if (key=="gamepath_length") {
                 this->launchPathLen = value;
             }
-            //std::cout << key << " ::: " << value << "\n";
         }
         __catch(const std::invalid_argument & e) { }
         

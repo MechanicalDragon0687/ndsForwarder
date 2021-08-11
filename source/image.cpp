@@ -19,8 +19,4 @@
         for (int c=0;c<iwidth;c++) {
 	 	    memcpy(getFrameBufferLocation(x+c,fromtop),&image[c*(iheight)],iwidth*this->bps);
 	    }
-	// for (int x=0;x<32;x++) {
-	// 	memcpy(getFrameBufferLocation(fb,10+x,100,width,height,bytesPerPixel),&bmp[x*(32)],32*bytesPerPixel);//32*3);
-	// }
-
     }
