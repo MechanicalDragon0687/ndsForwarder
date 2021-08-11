@@ -8,6 +8,7 @@ class Config {
     public:
     bool randomTID;
     bool customTitle;
+    unsigned long dsiwareCount;
     void draw(bool interactive=false);
     void interact(touchPosition *touch);
     Config();

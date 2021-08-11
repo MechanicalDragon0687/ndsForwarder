@@ -18,8 +18,25 @@ extern "C" {
 #include "config.hpp"
 namespace fs = std::filesystem;
 #define FORWARDER_DIR "sdmc:/3ds/forwarder"
-
+#define SYSTEM_APP_COUNT 6
+static u64 systemApps[SYSTEM_APP_COUNT] = { 
+					 0x00048005484E4441,
+					 0x0004800542383841,
+					 0x0004800F484E4841,
+					 0x0004800F484E4C41,
+					 0x00048005484E4443,
+					 0x00048005484E444B
+};
+inline bool isSystemApp(u64 tid) {
+	for (int i =0;i<SYSTEM_APP_COUNT;i++) {
+		if (tid==systemApps[i]) {
+			return true;
+		}
+	}
+	return false;
+}
 void denit() {
+	amExit();
 	romfsExit();
 	fsExit();
 	psExit();
@@ -39,6 +56,29 @@ int failWait(std::string message) {
 	denit();
 	return -1;
 }
+u32 getDsiWareCount() {
+	u32 title_count=0;
+	Result res = AM_GetTitleCount(MEDIATYPE_NAND, &title_count);
+	if (R_SUCCEEDED(res)) {
+		u64 titleID[title_count]={0};
+		u32 titles_read=0;
+		res = AM_GetTitleList(&titles_read,MEDIATYPE_NAND,title_count,titleID);
+		if (R_FAILED(res)) {
+			title_count=1000;
+		}else{
+			title_count=0;
+			for (u32 i=0;i<titles_read;i++) {
+				u16 uCategory = (u16)((titleID[i] >> 32) & 0xFFFF);
+				if (uCategory==0x8004 || uCategory==0x8005 || uCategory==0x800F || uCategory==0x8015 ) {
+						if (!isSystemApp(titleID[i]))
+							title_count+=1;
+				}
+			}
+		}
+		return title_count;
+	}
+	return 1000;
+}
 Result init() {
 	gfxInitDefault();
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
@@ -46,15 +86,17 @@ Result init() {
 	C2D_Prepare();
 
 	if (R_FAILED(fsInit())) {
-		return failWait("Failed to read init romfs\n");
+		return failWait("Failed to read init fs\n");
 	}
 	if (R_FAILED(psInit())) {
-		return failWait("Failed to read init romfs\n");
+		return failWait("Failed to read init ps\n");
 	}
 	if (R_FAILED(romfsInit())) {
 		return failWait("Failed to read init romfs\n");
 	}
-
+	if (R_FAILED(amInit())) {
+		return failWait("Failed to read init am\n");
+	}
 	if (!fileExists(FORWARDER_DIR)) {
 		std::filesystem::create_directories(std::filesystem::path(FORWARDER_DIR));
 	}
@@ -72,7 +114,7 @@ int main()
 	
 	Menu* menu = generateMenu(std::filesystem::path("/"),nullptr);
 	Config* config = new Config();
-	
+	config->dsiwareCount=getDsiWareCount();
 	Builder b;
 	b.initialize();
 

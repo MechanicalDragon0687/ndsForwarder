@@ -12,7 +12,7 @@ extern "C" {
 #include "dialog.hpp"
 #include "settings.hpp"
 #include "config.hpp"
-//#include "menu.h"
+#define MAX_DSIWARE 40
 //class MenuSelection {
 
     MenuSelection::MenuSelection(std::string s,std::filesystem::path p) {
@@ -186,6 +186,10 @@ extern "C" {
             MenuSelection entry = this->queue.front();
             switch (entry.action) {
                 case Install:
+                    if (config->dsiwareCount >= MAX_DSIWARE) {
+                        Dialog(target,0,0,320,240,{"Too many DSiWare installed",std::to_string(config->dsiwareCount)},{"OK"}).handle();
+                        break;
+                    }
                     if (Dialog(target,0,0,320,240,"Do you wish to install\n"+entry.path.filename().generic_string(),{"Yes","No"}).handle()==0) {
                         Result buildResult = 0;
                         if (config!=nullptr) {
@@ -214,6 +218,10 @@ extern "C" {
                 case Install_All:
                     if (Dialog(target,0,0,320,240,{"Do you wish to install","forwarders for all nds in:",entry.path.filename().generic_string()},{"Yes","No"}).handle()==0) {
                         for (const auto & dEntry : std::filesystem::directory_iterator(entry.path)) {
+                            if (config->dsiwareCount >= MAX_DSIWARE) {
+                                Dialog(target,0,0,320,240,{"Too many DSiWare installed",std::to_string(config->dsiwareCount)},{"OK"}).handle();
+                                break;
+                            }
                             std::string filename = dEntry.path().filename();
                             if (filename[0]=='.' || !(strcasecmp(dEntry.path().extension().c_str(),".nds")==0))
                                 continue;
@@ -237,6 +245,8 @@ extern "C" {
                             }
                             if (R_FAILED(buildResult)) {
                                 Dialog(target,0,0,320,240,"Install Failed\n"+filename+"\n"+std::to_string((u32)buildResult),{"OK"}).handle();
+                            }else{
+                                config->dsiwareCount++;
                             }
                         }
                         Dialog(target,0,0,320,240,"Install Complete",{"OK"}).handle();

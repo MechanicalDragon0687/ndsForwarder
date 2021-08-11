@@ -7,6 +7,7 @@
 Config::Config() {
     this->customTitle=false;
     this->randomTID=false;
+    this->dsiwareCount=0;
 }
 void Config::draw(bool interactive) {
     drawPanelWithTitle(0,0,0,320,240,MENU_BORDER_HEIGHT,BGColor,BORDER_COLOR,"Settings",BORDER_FOREGROUND);
