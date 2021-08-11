@@ -28,7 +28,7 @@ void denit() {
 	gfxExit();
 	
 }
-void failWait(std::string message) {
+int failWait(std::string message) {
 	consoleInit(GFX_BOTTOM, NULL);
 	std::cout << message << '\n';
 	std::cout << "\x1b[21;16HPress Start to exit.\n";
@@ -37,6 +37,7 @@ void failWait(std::string message) {
 		if (hidKeysDown() & KEY_START) break; 
 	}
 	denit();
+	return -1;
 }
 Result init() {
 	gfxInitDefault();
@@ -71,7 +72,6 @@ int main()
 	
 	Menu* menu = generateMenu(std::filesystem::path("/"),nullptr);
 	Config* config = new Config();
-	int perPage = 2;
 	
 	Builder b;
 	b.initialize();
@@ -81,6 +81,7 @@ int main()
 
 		//Scan all the inputs. This should be done once for each frame
 		hidScanInput();
+		u32 kDown = hidKeysDown();
 
 		// Touch Handling
 		touchPosition touch;
@@ -89,8 +90,6 @@ int main()
 		if (kDown & KEY_TOUCH) config->interact(&touch);
 
 		// Button Handling
-
-		u32 kDown = hidKeysDown();
 
 		if (kDown & KEY_START) break; // break in order to return to hbmenu
 
