@@ -59,7 +59,6 @@ extern "C" {
                 C2DExtra_DrawRectHollow(0,MENU_HEADING_HEIGHT+offset,0,400,ENTRY_HEIGHT,1,BORDER_COLOR);
                 C2D_TextBuf buf = C2D_TextBufNew(4096);
                 C2D_Text text;
-                const char* test = "test";
                 C2D_TextParse(&text,buf,&(*entry)->display.c_str()[0]);
                 float textheight=0;
                 C2D_TextGetDimensions(&text,0.67,0.67,NULL,&textheight);
@@ -81,7 +80,8 @@ extern "C" {
             std::string filename = entry.path().filename();
             if (
                 filename[0]=='.' || 
-                !(strcasecmp(entry.path().extension().c_str(),".nds")==0 || entry.is_directory())
+                !(strcasecmp(entry.path().extension().c_str(),".nds")==0 || entry.is_directory()) ||
+                (filename=="_nds" && path.generic_string()=="/")
             )
                 continue;
             MenuSelection* menuEntry = new MenuSelection();
