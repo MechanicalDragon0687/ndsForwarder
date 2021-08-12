@@ -17,7 +17,7 @@ extern "C" {
 #include "settings.hpp"
 #include "config.hpp"
 namespace fs = std::filesystem;
-#define FORWARDER_DIR "sdmc:/3ds/forwarder"
+
 #define SYSTEM_APP_COUNT 6
 static u64 systemApps[SYSTEM_APP_COUNT] = { 
 					 0x00048005484E4441,
