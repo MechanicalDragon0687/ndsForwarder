@@ -20,6 +20,7 @@ void drawPanel(float x, float y, float z, float width, float height, float borde
 void drawText(float x, float y, float z, float scale, u32 bgColor, u32 fontColor, const char* text, u32 flags);
 void drawCheckbox(float x, float y, float z, float width, float height, float scale, u32 bgColor, u32 borderColor, u32 color, const char* label, bool checked);
 void C2DExtra_DrawRectHollow(float x, float y, float z, float width, float height, float thickness, u32 color);
+void drawArrow(float x, float y, float z, float height, float width, u32 color, bool flip);
 #ifdef __cplusplus
 }
 #endif

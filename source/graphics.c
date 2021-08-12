@@ -79,3 +79,10 @@ void drawCheckbox(float x, float y, float z, float width, float height, float sc
     if (strlen(label) > 0)
         drawText(x+width+3,y+(height/2),z,scale,bgColor,color,label,0);
 }
+void drawArrow(float x, float y, float z, float height, float width, u32 color, bool flip) {
+    if (flip) {
+        C2D_DrawTriangle( x+width, y+height/2, color, x,y,color,x,y+height,color,0);
+    }else{
+        C2D_DrawTriangle( x, y+height/2, color, x+width,y,color,x+width,y+height,color,0);
+    }
+}
