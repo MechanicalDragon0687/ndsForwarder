@@ -8,3 +8,4 @@
 *.3ds
 .vscode/
 build/
+!romfs
