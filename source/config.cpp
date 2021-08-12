@@ -3,17 +3,54 @@
 #include "config.hpp"
 #include "graphics.h"
 #include "settings.hpp"
+#include <vector>
+#include <filesystem>
+#include <algorithm>
+#include "logger.hpp"
+
+Logger configLogger("Config");
 
 Config::Config() {
     this->customTitle=false;
     this->randomTID=false;
     this->dsiwareCount=0;
+    this->templates = std::vector<std::string>();
+    this->templates.push_back("sdcard");
+    for (const auto & entry : std::filesystem::directory_iterator(ROMFS_TEMPLATE_DIR)) {
+        std::string filename = entry.path().filename();
+        if (entry.path().extension().generic_string() != ".fwd") continue;
+        configLogger.info("Found "+filename+" on romfs");
+        this->templates.push_back(filename.substr(0,filename.find_last_of('.')));
+    }
+
+    configLogger.info("Checking sd for templates");
+    std::filesystem::create_directories(SDCARD_TEMPLATE_DIR);
+    for (const auto & entry : std::filesystem::directory_iterator(SDCARD_TEMPLATE_DIR)) {
+        std::string filename = entry.path().filename();
+        configLogger.info(filename);
+        if (entry.path().extension().generic_string() != ".fwd") continue;
+        configLogger.info("Found "+filename+" on sdmc");
+        this->templates.push_back(filename.substr(0,filename.find_last_of('.')));
+    }
+    //deduplicate
+    configLogger.info("deduplicating");
+
+    std::sort( this->templates.begin(), this->templates.end() );
+    this->templates.erase( std::unique( this->templates.begin(), this->templates.end() ), this->templates.end() );
+    if (this->templates.size() <= 0)
+        configLogger.warn("NO TEMPLATES FOUND");
+    this->currentTemplate=0;
 }
 void Config::draw(bool interactive) {
-    drawPanelWithTitle(0,0,0,320,240,MENU_BORDER_HEIGHT,BGColor,BORDER_COLOR,"Settings",BORDER_FOREGROUND);
+    drawPanelWithTitle(0,0,0,320,240,MENU_BORDER_HEIGHT,BGColor,BORDER_COLOR,VERSION,BORDER_FOREGROUND);
     drawCheckbox(MENU_BORDER_HEIGHT+10,MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+20,0,20,20,0.67,BGColor,BORDER_COLOR,FOREGROUND_COLOR,"Random TID",this->randomTID);
     drawCheckbox(MENU_BORDER_HEIGHT+10,MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+60,0,20,20,0.67,BGColor,BORDER_COLOR,FOREGROUND_COLOR,"Custom Title",this->customTitle);
-
+    if (this->templates.size() > 1) {
+        drawText(MENU_BORDER_HEIGHT+10,MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+110,0,0.67,BGColor,FOREGROUND_COLOR,"Template:",0);
+        drawArrow(MENU_BORDER_HEIGHT+10,MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+130,0,10,10,FOREGROUND_COLOR,false);
+        drawArrow(MENU_BORDER_HEIGHT+25,MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+130,0,10,10,FOREGROUND_COLOR,true);
+        drawText(MENU_BORDER_HEIGHT+50,MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+134,0,0.67,BORDER_COLOR,BORDER_FOREGROUND,this->templates.at(this->currentTemplate).c_str(),0);
+    }
 }
 void Config::interact(touchPosition *touch) {
     if (touch->px > MENU_BORDER_HEIGHT+10 && touch->px < MENU_BORDER_HEIGHT+30) {
@@ -24,6 +61,21 @@ void Config::interact(touchPosition *touch) {
             this->customTitle=!this->customTitle;
         }
     }
+    if (touch->px >= MENU_BORDER_HEIGHT+10 && touch->px <= MENU_BORDER_HEIGHT+20 &&
+        touch->py >= MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+130 && touch->py <= MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+140) {
+            if (this->currentTemplate > 0)
+                this->currentTemplate--;
+            else
+                this->currentTemplate=this->templates.size()-1;
+    }
+    if (touch->px >= MENU_BORDER_HEIGHT+25 && touch->px <= MENU_BORDER_HEIGHT+35 &&
+        touch->py >= MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+130 && touch->py <= MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+140) {
+            if (this->templates.size() > this->currentTemplate+1)
+                this->currentTemplate++;
+            else
+                this->currentTemplate=0;
+    }
+        
 
 }
 

@@ -190,6 +190,10 @@ extern "C" {
                         Dialog(target,0,0,320,240,{"Too many DSiWare installed",std::to_string(config->dsiwareCount)},{"OK"}).handle();
                         break;
                     }
+                    if (R_FAILED(builder->loadTemplate(config->templates.at(config->currentTemplate)))) {
+                        Dialog(target,0,0,320,240,{"Install Failed","Failed to load template"},{"OK"}).handle();
+                        break;
+                    }
                     if (Dialog(target,0,0,320,240,"Do you wish to install\n"+entry.path.filename().generic_string(),{"Yes","No"}).handle()==0) {
                         Result buildResult = 0;
                         if (config!=nullptr) {
@@ -203,7 +207,9 @@ extern "C" {
                                 swkbdInputText(&kbstate,customTitleBuffer,0x51);
                                 customTitle=std::string(customTitleBuffer);
                             }
-                            buildResult = builder->buildCIA(entry.path.generic_string(),config->randomTID,customTitle);
+                            buildResult = builder->loadTemplate(config->templates.at(config->currentTemplate));
+                            if (R_SUCCEEDED(buildResult))
+                                buildResult = builder->buildCIA(entry.path.generic_string(),config->randomTID,customTitle);
                         } else {
                             buildResult = builder->buildCIA(entry.path.generic_string());
                         }
@@ -217,6 +223,10 @@ extern "C" {
                     break;
                 case Install_All:
                     if (Dialog(target,0,0,320,240,{"Do you wish to install","forwarders for all nds in:",entry.path.filename().generic_string()},{"Yes","No"}).handle()==0) {
+                        if (R_FAILED(builder->loadTemplate(config->templates.at(config->currentTemplate)))) {
+                            Dialog(target,0,0,320,240,{"Install Failed","Failed to load template"},{"OK"}).handle();
+                            break;
+                        }
                         for (const auto & dEntry : std::filesystem::directory_iterator(entry.path)) {
                             if (config->dsiwareCount >= MAX_DSIWARE) {
                                 Dialog(target,0,0,320,240,{"Too many DSiWare installed",std::to_string(config->dsiwareCount)},{"OK"}).handle();

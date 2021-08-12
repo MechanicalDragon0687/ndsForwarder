@@ -8,10 +8,10 @@
 #include <sstream>
 #include <fstream>
 
-#define ROMFS_SRL "romfs:/sdcard.nds"
-#define ROMFS_TEMPLATE "romfs:/sdcard.fwd"
-#define SDCARD_SRL "sdmc:/3ds/forwarder/sdcard.nds"
-#define SDCARD_TEMPLATE "sdmc:/3ds/forwarder/sdcard.fwd"
+//#define ROMFS_SRL "romfs:/sdcard.nds"
+//#define ROMFS_TEMPLATE "romfs:/sdcard.fwd"
+//#define SDCARD_SRL "sdmc:/3ds/forwarder/sdcard.nds"
+//#define SDCARD_TEMPLATE "sdmc:/3ds/forwarder/sdcard.fwd"
 #define SDCARD_BANNER_PATH "sdmc:/3ds/forwarder/banners"
 #define NDSV1_HEADER_SIZE 0xA00
 #define NDSV2_HEADER_SIZE 0x1240
@@ -37,6 +37,7 @@ class Builder {
     void parseTemplate(std::string path);
     public:
     Result initialize();
+    Result loadTemplate(std::string templateName);
     Result buildCIA(std::string filename, bool randomTid=false, std::string customTitle="");
     Result installCIA();
 };

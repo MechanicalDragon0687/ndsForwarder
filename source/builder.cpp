@@ -12,31 +12,47 @@
 #include "tmd.h"
 #include "cia.h"
 #include "ticket.h"
+#include "settings.hpp"
 
 Logger logger("Builder");
 
 
-
-Result Builder::initialize() {
-
-    // READ SRL TEMPLATE FROM SD or ROMFS
-    std::string srlFileName = ROMFS_SRL;
-    std::string srlTemplate = ROMFS_TEMPLATE;
-    if (fileExists(SDCARD_SRL)) {
-        if (fileExists(SDCARD_TEMPLATE)) {
-            srlFileName=SDCARD_SRL;
-            srlTemplate=SDCARD_TEMPLATE;
-            logger.info("Loaded SDCard Templates from SDCARD.");
+Result Builder::loadTemplate(std::string templateName) {
+    this->launchPathLen = 0;
+    this->launchPathLocation=0;
+    if (templateName.empty())
+        return -1;
+    std::string srlFileName = templateName + ".nds";//ROMFS_SRL;
+    std::string srlTemplate = templateName + ".fwd";//ROMFS_TEMPLATE;
+    if (fileExists(SDCARD_TEMPLATE_DIR+srlFileName)) {
+        if (fileExists(SDCARD_TEMPLATE_DIR+srlTemplate)) {
+            srlFileName=SDCARD_TEMPLATE_DIR+srlFileName;
+            srlTemplate=SDCARD_TEMPLATE_DIR+srlTemplate;
+            logger.info("Loaded template "+templateName+" from SDCARD.");
         }else{
-            logger.error("Missing '"+std::string(SDCARD_TEMPLATE)+"'. Unable to load "+std::string(SDCARD_SRL)+" due to missing file.");
+            logger.error("Missing '"+std::string(SDCARD_TEMPLATE_DIR)+srlTemplate+"'. Unable to load "+std::string(SDCARD_TEMPLATE_DIR)+srlFileName+" due to missing file.");
+            return -1;
         }
+    }else if(fileExists(ROMFS_TEMPLATE_DIR+srlTemplate) && fileExists(ROMFS_TEMPLATE_DIR+srlFileName)) {
+        logger.info(templateName+" not found. Using built in template.");
+        srlTemplate=ROMFS_TEMPLATE_DIR+srlTemplate;
+        srlFileName=ROMFS_TEMPLATE_DIR+srlFileName;
     }else{
-        logger.info(std::string(SDCARD_SRL)+" not found. Using built in template.");
+        logger.info(templateName+" not found in "+SDCARD_TEMPLATE_DIR+" or in romfs");
+        return -1;
     }
     this->srl = readEntireFile(srlFileName);
     memcpy(&this->srlBannerLocation,this->srl.c_str() + 0x68,4);
 
     parseTemplate(srlTemplate);
+    if (this->launchPathLocation == 0 || this->launchPathLen==0) return -1;
+    return 0;
+
+}
+
+
+Result Builder::initialize() {
+
     
     // READ CERTCHAIN FROM CERTS.DB
     {
@@ -74,7 +90,8 @@ Result Builder::initialize() {
             logger.error(std::string(buf));
             return res;
         }
-        
+        this->launchPathLen = 0;
+        this->launchPathLocation=0;
     }
 
     return 0;
