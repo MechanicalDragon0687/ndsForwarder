@@ -12,6 +12,7 @@ extern "C" {
 #include "dialog.hpp"
 #include "settings.hpp"
 #include "config.hpp"
+#include "helpers.hpp"
 #define MAX_DSIWARE 40
 //class MenuSelection {
 
@@ -271,8 +272,10 @@ extern "C" {
         return this;
     }
     bool sortMenuSelections(MenuSelection* a, MenuSelection* b) {
+        std::string aDisplay = toLowerCase(a->display);
+        std::string bDisplay = toLowerCase(b->display);
         if ((a->action==OpenFolder && b->action==OpenFolder) || (!a->action==OpenFolder && !b->action==OpenFolder))
-            return a->display<b->display;
+            return aDisplay<bDisplay;
         return a->action==OpenFolder;
     }
 std::string shorten(std::string s, u16 len) {

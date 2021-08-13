@@ -11,6 +11,7 @@ void encryptAES128CBC(u8* out, u8* iv, u8* key, u8* data, u32 size) ;
 std::string aligned(const void* data, u64 size, u64 padTo);
 std::string aligned(std::string data, u64 padTo);
 std::string alignmentPadding(u64 size, u64 padTo);
+std::string toLowerCase(std::string s);
 
 typedef struct 
 {

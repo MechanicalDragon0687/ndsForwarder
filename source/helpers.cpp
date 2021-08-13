@@ -3,6 +3,7 @@
 #include <vector>
 #include "aes.h"
 #include <cstring>
+#include <algorithm>
 #include "helpers.hpp"
 std::string sha256(u8* data, u32 size) 
 {
@@ -61,4 +62,9 @@ std::string alignmentPadding(u64 size, u64 padTo) {
       return std::string(pad,count);
     }
     return std::string();
+}
+std::string toLowerCase(std::string s) {
+    std::string ret=s;
+    std::transform(ret.begin(), ret.end(), ret.begin(),[](unsigned char c){ return std::tolower(c); });
+    return ret;
 }
