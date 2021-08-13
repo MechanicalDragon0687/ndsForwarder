@@ -233,12 +233,13 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     //build twl
     return dsiware;
 }
+#ifdef DEBUG
 void writeArray(const void* data, u32 size) {
     for(u32 i=0; i<size; ++i)
         std::cout << std::hex << (int)((u8*)data)[i];
     std::cout << std::endl;
 }
-
+#endif
 Result Builder::buildCIA(std::string filename, bool randomTid, std::string customTitle) {
 
 //    const u16 contentCount = 1;
@@ -261,9 +262,9 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
     memset(header.contentIdx,0,0x2000);
     header.contentIdx[0x0] = 0x80;
     std::string cia = aligned(std::string((char*)&header,sizeof(header)),0x40) + aligned(this->ciaCertChain,0x40) + aligned(this->sections["ticket"],0x40) + aligned(this->sections["tmd"],0x40) + aligned(this->sections["content"],0x40);
+#ifdef DEBUG
     std::cout << "Created cia file data" << std::endl;
 
-#ifdef DEBUG
     std::ofstream fo(filename.substr(0,filename.find_last_of('.')+1)+"cia");
     fo.write(cia.c_str(),cia.size());
     fo.close();
@@ -273,37 +274,30 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
 	u32 bytes_written = 0;
     u32 size = cia.size();
 
-    Result ret =amInit();
+	Result ret = AM_StartCiaInstall(MEDIATYPE_NAND, &ciaInstallFileHandle);
     if (R_FAILED(ret)) {
-		std::cout << "Failed to Initialize AM\n" << std::endl;
+        logger.error("Error in:\nAM_StartCiaInstall\nret: "+std::to_string(ret));
         return ret;
 	}
-	ret = AM_StartCiaInstall(MEDIATYPE_NAND, &ciaInstallFileHandle);
-	if (R_FAILED(ret)) {
-		std::cout << "Error in:\nAM_StartCiaInstall\nret: " << std::hex << ret << std::endl;
-        return ret;
-	}
-    std::cout << "Writing to file";
+    logger.debug("Writing to file");
 	do {
         if (size > installSize)
             size=installSize;
 		ret = FSFILE_Write(ciaInstallFileHandle, &bytes_written, installOffset, cia.c_str(), size, FS_WRITE_FLUSH);
         if (R_FAILED(ret)) {
-    		std::cout << "\nError in:\nwriting to file\nret: " << std::hex << ret << std::endl;
+            logger.error("Error in:\nwriting to file\nret: "+std::to_string(ret));
             AM_CancelCIAInstall(ciaInstallFileHandle);
             return ret;
         }
-        std::cout << ".";
 		installOffset += bytes_written;
 	} while(installOffset < installSize);
-    std::cout << "done\n";
+    logger.debug("done");
 	ret = AM_FinishCiaInstall(ciaInstallFileHandle);
 	if (R_FAILED(ret)) {
-		printf("Error in:\nAM_FinishCiaInstall\n");
+		logger.error("Error in:\nAM_FinishCiaInstall\n");
 		return ret;
 	}
-    std::cout << "Installed Forwarder" << std::endl;
-    amExit();
+    logger.debug("Installed Forwarder");
     
 return 0;
 }
