@@ -9,3 +9,6 @@
 .vscode/
 build/
 !romfs
+core
+*.bmp
+*.srl1

@@ -5,6 +5,8 @@
 #include <cstring>
 #include <algorithm>
 #include "helpers.hpp"
+#include <sys/stat.h>
+
 std::string sha256(u8* data, u32 size) 
 {
     u8 buf[0x20]={0};
@@ -67,4 +69,28 @@ std::string toLowerCase(std::string s) {
     std::string ret=s;
     std::transform(ret.begin(), ret.end(), ret.begin(),[](unsigned char c){ return std::tolower(c); });
     return ret;
+}
+std::string readEntireFile(const std::string& path) {
+  FILE * f = fopen(path.c_str(),"rb");
+  fseek(f,0,SEEK_END);
+  size_t s = ftell(f);
+  fseek(f,0,SEEK_SET);
+  char *buf=(char*)calloc(1,s);
+  fread(buf,1,s,f);
+  fclose(f);
+  std::string ret(buf,s);
+  free(buf);
+  return ret;
+}
+
+bool fileExists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+unsigned long fileSize (const std::string& name) {
+  struct stat buffer;   
+  if (stat (name.c_str(), &buffer)==0) {
+    return buffer.st_size;
+  }
+  return 0;
 }

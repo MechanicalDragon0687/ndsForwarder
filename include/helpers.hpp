@@ -21,3 +21,7 @@ typedef struct
 }__attribute__((__packed__)) 
 sSignature;
 
+std::string readEntireFile(const std::string& path);
+
+bool fileExists (const std::string& name);
+unsigned long fileSize (const std::string& name);

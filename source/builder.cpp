@@ -12,6 +12,7 @@
 #include "tmd.h"
 #include "cia.h"
 #include "ticket.h"
+#include "bmp.hpp"
 #include "settings.hpp"
 
 Logger logger("Builder");
@@ -43,7 +44,7 @@ Result Builder::loadTemplate(std::string templateName) {
     }
     this->srl = readEntireFile(srlFileName);
     memcpy(&this->srlBannerLocation,this->srl.c_str() + 0x68,4);
-
+    
     parseTemplate(srlTemplate);
     if (this->launchPathLocation == 0 || this->launchPathLen==0) return -1;
     return 0;
@@ -107,17 +108,31 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     char extraTitles[2][0x100] = {0};
     const u8 noAnimation[] = {0x01,0x00,0x00,0x01};
     std::string customBannerFilename = filename.substr(0,filename.find_last_of('.'))+".bin";
+    std::string customIconFilename = filename.substr(0,filename.find_last_of('.'))+".bmp";
+
     logger.info("looking for banner at "+customBannerFilename);
     bool customBanner = fileExists(customBannerFilename) && fileSize(customBannerFilename) == 0x23C0;
+    bool customBMPIcon = fileExists(customIconFilename);
     if (!customBanner) {
-        customBannerFilename=filename.substr(filename.find_last_of('/'),filename.find_last_of('.')-filename.find_last_of('/'))+".bin";
+        customBannerFilename=filename.substr(filename.find_last_of('/')+1,filename.find_last_of('.')-filename.find_last_of('/')-1)+".bin";
         customBannerFilename=SDCARD_BANNER_PATH+customBannerFilename;
         logger.info("looking for banner at "+customBannerFilename);
         customBanner = fileExists(customBannerFilename) && fileSize(customBannerFilename) == 0x23C0;
     }
+    if (!customBMPIcon) {
+        customIconFilename=filename.substr(filename.find_last_of('/')+1,filename.find_last_of('.')-filename.find_last_of('/')-1)+".bmp";
+        customIconFilename=SDCARD_ICON_PATH+customIconFilename;
+        logger.info("looking for custom bmp icon at "+customIconFilename);
+        customBMPIcon = fileExists(customIconFilename);
+    }
     std::ifstream f(filename);
     f.seekg(0);
     f.read((char*)&header,sizeof(header));
+    bool extendedHeader = (header.headerSize == 0x4000);
+    if (header.bannerOffset == 0) {
+        logger.error("NDS file contains no banner. This file is not supported.");
+        return "";
+    }
     f.seekg(header.bannerOffset);
     f.read((char*)&banner,sizeof(banner));
     if ((banner.version & 0xFF) > 1) {
@@ -156,6 +171,9 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
             f.read(animatedIconData,0x1180);
         }
         f.close();
+    }else if(customBMPIcon) {
+        if (R_SUCCEEDED(loadBmpAsIcon(customIconFilename,&banner)))
+            banner.version &= 3;
     }
     //TODO apply nds file to srl
     std::string dsiware = this->srl;
@@ -186,7 +204,8 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     dsiware.replace(0,0x0C,header.gameTitle,0x0C);
     dsiware.replace(0x0C,0x04,header.gameCode,0x04);
     char emagCode[] = {header.gameCode[0x03],header.gameCode[0x02],header.gameCode[0x01],header.gameCode[0x00]};
-    dsiware.replace(0x230,0x04,emagCode,0x04);
+    if (extendedHeader)
+        dsiware.replace(0x230,0x04,emagCode,0x04);
     dsiware.replace(0x10,0x02,header.makercode,0x02);
     // Set Banner
 
@@ -248,6 +267,10 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
     PS_GenerateRandomBytes(contentID+1,3);
 
     this->sections["content"] = buildSRL(filename, randomTid, customTitle);
+    if (this->sections["content"].size() == 0) {
+        logger.error("Failed to create forwarder.");
+        return -1;
+    }
 	std::string srlSha = sha256( (u8*)this->sections["content"].c_str(), this->sections["content"].size());
     this->sections["ticket"]=buildTicket(filename);
     this->sections["tmd"]=this->buildTMD(contentID);

@@ -1,10 +1,13 @@
 #pragma once
 
-#define VERSION "v1.1.0-beta"
+#define VERSION "v1.2.0-beta"
+//#define DEBUG 1
 
 #define FORWARDER_DIR std::string("sdmc:/3ds/forwarder")
 #define SDCARD_TEMPLATE_DIR FORWARDER_DIR+std::string("/templates/")
 #define ROMFS_TEMPLATE_DIR std::string("romfs:/templates/")
+#define SDCARD_BANNER_PATH FORWARDER_DIR+std::string("/banners/")
+#define SDCARD_ICON_PATH FORWARDER_DIR+std::string("/icons/")
 
 #define ENTRY_HEIGHT 48
 #define FILELIST_HEIGHT (240-MENU_HEADING_HEIGHT-MENU_BORDER_HEIGHT)

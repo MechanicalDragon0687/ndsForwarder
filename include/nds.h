@@ -1,7 +1,7 @@
 /// data in this file was copied from libnds which is part of devkitpro
 /// https://github.com/devkitPro/libnds
 /// this header's structs are not my own and i make no claims to it
-
+#pragma once
 #include <3ds.h>
 #include <citro2d.h>
 typedef struct sNDSHeader {

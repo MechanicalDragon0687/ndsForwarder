@@ -16,6 +16,7 @@ extern "C" {
 #include "builder.hpp"
 #include "settings.hpp"
 #include "config.hpp"
+#include "helpers.hpp"
 namespace fs = std::filesystem;
 
 #define SYSTEM_APP_COUNT 6
