@@ -13,6 +13,8 @@ extern "C" {
 #include "settings.hpp"
 #include "config.hpp"
 #include "helpers.hpp"
+#include "lang.hpp"
+
 #define MAX_DSIWARE 40
 //class MenuSelection {
 
@@ -110,7 +112,7 @@ extern "C" {
         if (ndsFilesVisible) {
             MenuSelection* installAll = new MenuSelection();
             installAll->action=Install_All;
-            installAll->display="< Install all nds >";
+            installAll->display=gLang.getString("menu_installAll");
             installAll->path=path;
             entries.insert(entries.begin(),installAll);
         }
@@ -188,14 +190,14 @@ extern "C" {
             switch (entry.action) {
                 case Install:
                     if (config->dsiwareCount >= MAX_DSIWARE) {
-                        Dialog(target,0,0,320,240,{"Too many DSiWare installed",std::to_string(config->dsiwareCount)},{"OK"}).handle();
+                        Dialog(target,0,0,320,240,{gLang.getString("menu_tooManyDSiWare"),std::to_string(config->dsiwareCount)},{gLang.getString("menu_ok")}).handle();
                         break;
                     }
                     if (R_FAILED(builder->loadTemplate(config->templates.at(config->currentTemplate)))) {
-                        Dialog(target,0,0,320,240,{"Install Failed","Failed to load template"},{"OK"}).handle();
+                        Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("menu_noTemplate")},{gLang.getString("menu_ok")}).handle();
                         break;
                     }
-                    if (Dialog(target,0,0,320,240,"Do you wish to install\n"+entry.path.filename().generic_string(),{"Yes","No"}).handle()==0) {
+                    if (Dialog(target,0,0,320,240,{gLang.getString("menu_installTitleQ"),entry.path.filename().generic_string()},{gLang.getString("menu_yes"),gLang.getString("menu_no")}).handle()==0) {
                         Result buildResult = 0;
                         if (config!=nullptr) {
                             std::string customTitle="";
@@ -203,7 +205,7 @@ extern "C" {
                                 char customTitleBuffer[0x51] = {0};
                                 SwkbdState kbstate;
                                 swkbdInit(&kbstate,SWKBD_TYPE_NORMAL,2,0x50);
-                                swkbdSetHintText(&kbstate,"Enter a Custom Title Name");
+                                swkbdSetHintText(&kbstate,gLang.getString("menu_customTitleQ").c_str());
                                 swkbdSetFeatures(&kbstate,SWKBD_MULTILINE | SWKBD_DEFAULT_QWERTY);
                                 swkbdInputText(&kbstate,customTitleBuffer,0x51);
                                 customTitle=std::string(customTitleBuffer);
@@ -216,28 +218,28 @@ extern "C" {
                         }
                         
                         if (R_SUCCEEDED(buildResult)) {
-                            Dialog(target,0,0,320,240,"Install Complete",{"OK"}).handle();
+                            Dialog(target,0,0,320,240,gLang.getString("menu_installComplete"),{gLang.getString("menu_ok")}).handle();
                         }else{
-                            Dialog(target,0,0,320,240,"Install Failed",{"OK"}).handle();
+                            Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),std::to_string((u32)buildResult)},{gLang.getString("menu_ok")}).handle();
                         }
                     }
                     break;
                 case Install_All:
-                    if (Dialog(target,0,0,320,240,{"Do you wish to install","forwarders for all nds in:",entry.path.filename().generic_string()},{"Yes","No"}).handle()==0) {
+                    if (Dialog(target,0,0,320,240,{gLang.getString("menu_installTitleQ"),gLang.getString("menu_allForwarders"),(!entry.path.filename().generic_string().empty())?entry.path.filename().generic_string():"/"},{gLang.getString("menu_yes"),gLang.getString("menu_no")}).handle()==0) {
                         if (R_FAILED(builder->loadTemplate(config->templates.at(config->currentTemplate)))) {
-                            Dialog(target,0,0,320,240,{"Install Failed","Failed to load template"},{"OK"}).handle();
+                            Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("menu_noTemplate")},{gLang.getString("menu_ok")}).handle();
                             break;
                         }
                         for (const auto & dEntry : std::filesystem::directory_iterator(entry.path)) {
                             if (config->dsiwareCount >= MAX_DSIWARE) {
-                                Dialog(target,0,0,320,240,{"Too many DSiWare installed",std::to_string(config->dsiwareCount)},{"OK"}).handle();
+                                Dialog(target,0,0,320,240,{gLang.getString("menu_tooManyDSiWare"),std::to_string(config->dsiwareCount)},{gLang.getString("menu_ok")}).handle();
                                 break;
                             }
                             std::string filename = dEntry.path().filename();
                             if (filename[0]=='.' || !(strcasecmp(dEntry.path().extension().c_str(),".nds")==0))
                                 continue;
-                            std::string shortname = dEntry.path().filename().generic_string();
-                            Dialog(target,0,0,320,240,{"Installing",shorten(dEntry.path().filename().generic_string(),25)},{},0).handle();
+                            std::string shortname = shorten(dEntry.path().filename().generic_string(),25);
+                            Dialog(target,0,0,320,240,{gLang.getString("menu_installing"),shortname},{},0).handle();
                             Result buildResult = 0;
                             if (config!=nullptr) {
                                 std::string customTitle="";
@@ -245,7 +247,7 @@ extern "C" {
                                     char customTitleBuffer[0x51] = {0};
                                     SwkbdState kbstate;
                                     swkbdInit(&kbstate,SWKBD_TYPE_NORMAL,2,0x50);
-                                    swkbdSetHintText(&kbstate,shorten(dEntry.path().filename().generic_string(),30).c_str());
+                                    swkbdSetHintText(&kbstate,shortname.c_str());
                                     swkbdSetFeatures(&kbstate,SWKBD_MULTILINE | SWKBD_DEFAULT_QWERTY);
                                     swkbdInputText(&kbstate,customTitleBuffer,0x51);
                                     customTitle=std::string(customTitleBuffer);
@@ -255,12 +257,12 @@ extern "C" {
                                 buildResult = builder->buildCIA(dEntry.path().generic_string());
                             }
                             if (R_FAILED(buildResult)) {
-                                Dialog(target,0,0,320,240,"Install Failed\n"+filename+"\n"+std::to_string((u32)buildResult),{"OK"}).handle();
+                                Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),shortname,std::to_string((u32)buildResult)},{gLang.getString("menu_ok")}).handle();
                             }else{
                                 config->dsiwareCount++;
                             }
                         }
-                        Dialog(target,0,0,320,240,"Install Complete",{"OK"}).handle();
+                        Dialog(target,0,0,320,240,gLang.getString("menu_installComplete"),{gLang.getString("menu_ok")}).handle();
                     }
                     break;
                 case OpenFolder:

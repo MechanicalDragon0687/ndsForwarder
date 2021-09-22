@@ -1,0 +1,48 @@
+{
+    "main_exit":"Press Start to exit.",
+
+    "bmp_failedToOpen":"Failed to open %s",
+    "bmp_invalid":"%s is not a valid bitmap file",
+    "bmp_invalidSize":"%s has invalid width or height. Must be 32x32",
+    "bmp_XxY":"%s is %dx%d",
+    "bmp_invalidColors":"%s has too many colors: %d.",
+    "bmp_invalidDepth":"%s is too deep. use 4bit.",
+    "bmp_isCompressed":"%s is compressed. Compression is not supported.",
+
+    "builder_loadingTemplate":"Loaded template %s from SDCARD.",
+    "builder_missingTemplate":"Missing '%s'. Unable to load %s due to missing file.",
+    "builder_defaultTemplate":"%s not found. Using built in template.",
+    "builder_missingSRL":"%s not found in %s or in romfs",
+    "builder_noCertsDB":"Failed to open certs.db file. res: %lx",
+    "builder_searchBanner":"looking for banner at %s",
+    "builder_searchIcon":"looking for custom bmp icon at %s",
+    "builder_noNDSBanner":"NDS file contains no banner. This file is not supported.",
+    "builder_fail":"Failed to create forwarder.",
+    "builder_ErrInRet":"Error in:%s\n%s\nret: %xl",
+    "builder_ErrIn":"Error in:%s\n%s",
+
+    "config_foundTemplate":"Found %s on %s",
+    "config_searchTemplates":"Checking %s for templates",
+    "config_deduplicating":"deduplicating",
+    "config_noTemplates":"NO TEMPLATES FOUND",
+
+    "menu_ok":"OK",
+    "menu_cancel":"Cancel",
+    "menu_yes":"Yes",
+    "menu_no":"No",
+
+    "menu_installAll":"< Install All nds >",
+    "menu_tooManyDSiWare":"Too many DSiWare installed",
+    "menu_installTitleQ":"Do you wish to install",
+    "menu_customTitleQ":"Enter a Custom Title Name",
+    "menu_installComplete":"Install Complete",
+    "menu_installFailed":"Install Failed",
+    "menu_allForwarders":"forwarders for all nds in:",
+    "menu_noTemplate":"Failed to load template",
+    "menu_installing":"Installing",
+
+    "debug_done":"done",
+    "debug_createdCIA":"Created cia file data",
+    "debug_writingToFile":"Writing to file",
+    "debug_installedForwarder":"Installed Forwarder"
+}

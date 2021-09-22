@@ -3,37 +3,38 @@
 #include <fstream>
 #include "bmp.hpp"
 #include "logger.hpp"
+#include "lang.hpp"
 
 Logger bmplogger("BmpHandler");
 Result loadBmpAsIcon(std::string filename, tNDSBanner* banner) {
     BMPHeader bmpHeader={0};
     std::ifstream f(filename);
     if (f.fail()) {
-        bmplogger.error("Failed to open "+filename);
+        bmplogger.error(gLang.parseString("bmp_failedToOpen",filename.c_str()));
         return -1;
     }
     f.read((char*)&bmpHeader, sizeof(bmpHeader));
     if (bmpHeader.magic !=0x4D42) {
         f.close();
-        bmplogger.error(filename + " is not a valid bitmap file");
+        bmplogger.error(gLang.parseString("bmp_invalid",filename.c_str()));
         bmplogger.error(std::to_string(bmpHeader.magic));
         return -1;
     }
     if (bmpHeader.infoHeader.width != 32 || bmpHeader.infoHeader.height != 32) {
-        bmplogger.error(filename + " has invalid width or height. Must be 32x32");
-        bmplogger.error(filename + " is " + std::to_string(bmpHeader.infoHeader.width) + "x"+std::to_string(bmpHeader.infoHeader.height));
+        bmplogger.error(gLang.parseString("bmp_invalidSize",filename.c_str()));
+        bmplogger.error(gLang.parseString("bmp_XxY",filename.c_str(),bmpHeader.infoHeader.width,bmpHeader.infoHeader.height));
         return -1;
     }
     if (bmpHeader.infoHeader.importantColors>16) {
-        bmplogger.error(filename + " has too many colors.");
+        bmplogger.error(gLang.parseString("bmp_invalidColors",filename.c_str(),bmpHeader.infoHeader.importantColors));
         return -1;
     }
     if (bmpHeader.infoHeader.bpp>4) {
-        bmplogger.error(filename + " is too deep. use 4bit.");
+        bmplogger.error(gLang.parseString("bmp_invalidDepth",filename.c_str()));
         return -1;
     }
     if (bmpHeader.infoHeader.compression != 0) {
-        bmplogger.error(filename + " is compressed. Compression is not supported.");
+        bmplogger.error(gLang.parseString("bmp_isCompressed",filename.c_str()));
     }
     u32 BGR888_palette[16]={0};
     u16 palette[16]={0};

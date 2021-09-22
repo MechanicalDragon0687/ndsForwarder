@@ -49,7 +49,7 @@ int Dialog::handle() {
             if (this->selected < 0) this->selected=this->options.size()-1;
         }else if(kDown & KEY_RIGHT) {
             this->selected++;
-            if (this->selected > this->options.size()) this->selected=0;
+            if (this->selected >= this->options.size()) this->selected=0;
         }else if(kDown & KEY_A || kDown & KEY_START) {
             return this->selected;
         }

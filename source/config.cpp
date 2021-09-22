@@ -7,7 +7,7 @@
 #include <filesystem>
 #include <algorithm>
 #include "logger.hpp"
-
+#include "lang.hpp"
 Logger configLogger("Config");
 
 Config::Config() {
@@ -19,26 +19,27 @@ Config::Config() {
     for (const auto & entry : std::filesystem::directory_iterator(ROMFS_TEMPLATE_DIR)) {
         std::string filename = entry.path().filename();
         if (entry.path().extension().generic_string() != ".fwd") continue;
-        configLogger.info("Found "+filename+" on romfs");
+        configLogger.info(gLang.parseString("config_foundTemplate",filename.c_str(),"romfs"));
         this->templates.push_back(filename.substr(0,filename.find_last_of('.')));
     }
 
-    configLogger.info("Checking sd for templates");
+    configLogger.info(gLang.parseString("config_searchTemplates","SD"));
     std::filesystem::create_directories(SDCARD_TEMPLATE_DIR);
     for (const auto & entry : std::filesystem::directory_iterator(SDCARD_TEMPLATE_DIR)) {
         std::string filename = entry.path().filename();
         configLogger.info(filename);
         if (entry.path().extension().generic_string() != ".fwd") continue;
-        configLogger.info("Found "+filename+" on sdmc");
+        configLogger.info(gLang.parseString("config_foundTemplate",filename.c_str(),"sd"));
+        //configLogger.info("Found "+filename+" on sdmc");
         this->templates.push_back(filename.substr(0,filename.find_last_of('.')));
     }
     //deduplicate
-    configLogger.info("deduplicating");
+    configLogger.info(gLang.getString("config_deduplicating"));
 
     std::sort( this->templates.begin(), this->templates.end() );
     this->templates.erase( std::unique( this->templates.begin(), this->templates.end() ), this->templates.end() );
     if (this->templates.size() <= 0)
-        configLogger.warn("NO TEMPLATES FOUND");
+        configLogger.warn(gLang.getString("config_noTemplates"));
     this->currentTemplate=0;
 }
 void Config::draw(bool interactive) {

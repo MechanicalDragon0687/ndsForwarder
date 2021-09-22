@@ -14,6 +14,7 @@
 #include "ticket.h"
 #include "bmp.hpp"
 #include "settings.hpp"
+#include "lang.hpp"
 
 Logger logger("Builder");
 
@@ -29,17 +30,17 @@ Result Builder::loadTemplate(std::string templateName) {
         if (fileExists(SDCARD_TEMPLATE_DIR+srlTemplate)) {
             srlFileName=SDCARD_TEMPLATE_DIR+srlFileName;
             srlTemplate=SDCARD_TEMPLATE_DIR+srlTemplate;
-            logger.info("Loaded template "+templateName+" from SDCARD.");
+            logger.info(gLang.parseString("builder_loadingTemplate",templateName.c_str()));
         }else{
-            logger.error("Missing '"+std::string(SDCARD_TEMPLATE_DIR)+srlTemplate+"'. Unable to load "+std::string(SDCARD_TEMPLATE_DIR)+srlFileName+" due to missing file.");
+            logger.error(gLang.parseString("builder_missingTemplate",(std::string(SDCARD_TEMPLATE_DIR)+srlTemplate).c_str(),(std::string(SDCARD_TEMPLATE_DIR)+srlFileName).c_str()));
             return -1;
         }
     }else if(fileExists(ROMFS_TEMPLATE_DIR+srlTemplate) && fileExists(ROMFS_TEMPLATE_DIR+srlFileName)) {
-        logger.info(templateName+" not found. Using built in template.");
+        logger.info(gLang.parseString("builder_defaultTemplate",templateName.c_str()));
         srlTemplate=ROMFS_TEMPLATE_DIR+srlTemplate;
         srlFileName=ROMFS_TEMPLATE_DIR+srlFileName;
     }else{
-        logger.info(templateName+" not found in "+SDCARD_TEMPLATE_DIR+" or in romfs");
+        logger.info(gLang.parseString("builder_missingSRL",templateName.c_str(),(SDCARD_TEMPLATE_DIR).c_str()));
         return -1;
     }
     this->srl = readEntireFile(srlFileName);
@@ -86,9 +87,9 @@ Result Builder::initialize() {
             FSFILE_Close (hFile);
 
         }else{
-            char buf[50]={0};
-            sprintf(buf,"Failed to open certs.db file. res: %lx",res);
-            logger.error(std::string(buf));
+            //char buf[50]={0};
+            //sprintf(buf,"Failed to open certs.db file. res: %lx",res);
+            logger.error(gLang.parseString("builder_noCertsDB",res));
             return res;
         }
         this->launchPathLen = 0;
@@ -110,19 +111,19 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     std::string customBannerFilename = filename.substr(0,filename.find_last_of('.'))+".bin";
     std::string customIconFilename = filename.substr(0,filename.find_last_of('.'))+".bmp";
 
-    logger.info("looking for banner at "+customBannerFilename);
+    logger.info(gLang.parseString("builder_searchBanner",customBannerFilename.c_str()));
     bool customBanner = fileExists(customBannerFilename) && fileSize(customBannerFilename) == 0x23C0;
     bool customBMPIcon = fileExists(customIconFilename);
     if (!customBanner) {
         customBannerFilename=filename.substr(filename.find_last_of('/')+1,filename.find_last_of('.')-filename.find_last_of('/')-1)+".bin";
         customBannerFilename=SDCARD_BANNER_PATH+customBannerFilename;
-        logger.info("looking for banner at "+customBannerFilename);
+        logger.info(gLang.parseString("builder_searchBanner",customBannerFilename.c_str()));
         customBanner = fileExists(customBannerFilename) && fileSize(customBannerFilename) == 0x23C0;
     }
     if (!customBMPIcon) {
         customIconFilename=filename.substr(filename.find_last_of('/')+1,filename.find_last_of('.')-filename.find_last_of('/')-1)+".bmp";
         customIconFilename=SDCARD_ICON_PATH+customIconFilename;
-        logger.info("looking for custom bmp icon at "+customIconFilename);
+        logger.info(gLang.parseString("builder_searchIcon",customIconFilename.c_str()));
         customBMPIcon = fileExists(customIconFilename);
     }
     std::ifstream f(filename);
@@ -130,7 +131,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     f.read((char*)&header,sizeof(header));
     bool extendedHeader = (header.headerSize == 0x4000);
     if (header.bannerOffset == 0) {
-        logger.error("NDS file contains no banner. This file is not supported.");
+        logger.error(gLang.getString("builder_noNDSBanner"));
         return "";
     }
     f.seekg(header.bannerOffset);
@@ -268,7 +269,7 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
 
     this->sections["content"] = buildSRL(filename, randomTid, customTitle);
     if (this->sections["content"].size() == 0) {
-        logger.error("Failed to create forwarder.");
+        logger.error(gLang.getString("builder_fail"));
         return -1;
     }
 	std::string srlSha = sha256( (u8*)this->sections["content"].c_str(), this->sections["content"].size());
@@ -299,28 +300,28 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
 
 	Result ret = AM_StartCiaInstall(MEDIATYPE_NAND, &ciaInstallFileHandle);
     if (R_FAILED(ret)) {
-        logger.error("Error in:\nAM_StartCiaInstall\nret: "+std::to_string(ret));
+        logger.error(gLang.parseString("builder_ErrInRet","AM_StartCiaInstall",ret));
         return ret;
 	}
-    logger.debug("Writing to file");
+    logger.debug(gLang.getString("debug_writingToFile"));
 	do {
         if (size > installSize)
             size=installSize;
 		ret = FSFILE_Write(ciaInstallFileHandle, &bytes_written, installOffset, cia.c_str(), size, FS_WRITE_FLUSH);
         if (R_FAILED(ret)) {
-            logger.error("Error in:\nwriting to file\nret: "+std::to_string(ret));
+            logger.error(gLang.parseString("builder_ErrInRet","writing to file",ret));
             AM_CancelCIAInstall(ciaInstallFileHandle);
             return ret;
         }
 		installOffset += bytes_written;
 	} while(installOffset < installSize);
-    logger.debug("done");
+    logger.debug(gLang.getString("debug_done"));
 	ret = AM_FinishCiaInstall(ciaInstallFileHandle);
 	if (R_FAILED(ret)) {
-		logger.error("Error in:\nAM_FinishCiaInstall\n");
+		logger.error(gLang.parseString("builder_ErrInRet","AM_FinishCiaInstall",ret));
 		return ret;
 	}
-    logger.debug("Installed Forwarder");
+    logger.debug(gLang.getString("debug_installedForwarder"));
     
 return 0;
 }

@@ -11,6 +11,7 @@ extern "C" {
 #include "nds.h"
 #include "graphics.h"
 }
+#include "lang.hpp"
 #include "image.hpp"
 #include "menu.hpp"
 #include "builder.hpp"
@@ -38,6 +39,7 @@ inline bool isSystemApp(u64 tid) {
 }
 void denit() {
 	amExit();
+	cfguExit();
 	romfsExit();
 	fsExit();
 	psExit();
@@ -49,7 +51,7 @@ void denit() {
 int failWait(std::string message) {
 	consoleInit(GFX_BOTTOM, NULL);
 	std::cout << message << '\n';
-	std::cout << "\x1b[21;16HPress Start to exit.\n";
+	std::cout << "\x1b[21;16H" << ((gLang.isReady())?gLang.getString("main_exit"):"Press Start to exit.") << "\n";
 	while (aptMainLoop()) {
 		hidScanInput();
 		if (hidKeysDown() & KEY_START) break; 
@@ -87,16 +89,19 @@ Result init() {
 	C2D_Prepare();
 
 	if (R_FAILED(fsInit())) {
-		return failWait("Failed to read init fs\n");
+		return failWait("Failed to init fs\n");
+	}
+	if (R_FAILED(cfguInit())) {
+		return failWait("Failed to init cfgu\n");
 	}
 	if (R_FAILED(psInit())) {
-		return failWait("Failed to read init ps\n");
+		return failWait("Failed to init ps\n");
 	}
 	if (R_FAILED(romfsInit())) {
-		return failWait("Failed to read init romfs\n");
+		return failWait("Failed to init romfs\n");
 	}
 	if (R_FAILED(amInit())) {
-		return failWait("Failed to read init am\n");
+		return failWait("Failed to init am\n");
 	}
 	if (!fileExists(FORWARDER_DIR)) {
 		std::filesystem::create_directories(std::filesystem::path(FORWARDER_DIR));
@@ -109,7 +114,9 @@ int main()
 {
 	if (R_FAILED(init()))
 		return -1;
-	
+	u8 language=0;
+	CFGU_GetSystemLanguage(&language);
+	gLang.loadStrings(language);
 	C3D_RenderTarget* top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
 	C3D_RenderTarget* bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 	
