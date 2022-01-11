@@ -187,17 +187,13 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         }
     }
     if (!customTitle.empty()) {
-        char cTitle[0x100/2] = {0};
-        strncpy(cTitle,customTitle.c_str(),0x100/2);
+        uint16_t cTitle[0x80] = {0};
+        utf8_to_utf16(cTitle, (u8*)customTitle.c_str(), 0x80);
         for(int i=0;i<6;i++) {
-            for (int x=0;x<0x100/2;x++) {
-                banner.titles[i][x] = cTitle[x];
-            }
+            memcpy(banner.titles[i], cTitle, 0x80 * sizeof(uint16_t));
         }
         for(int i=0;i<2;i++) {
-            for (int x=0;x<0x100/2;x++) {
-                extraTitles[i][x] = cTitle[x];
-            }
+            memcpy(extraTitles[i], cTitle, 0x80 * sizeof(uint16_t));
         }
     }
     // Set header
