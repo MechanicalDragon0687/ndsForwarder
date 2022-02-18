@@ -103,7 +103,8 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         return "";
     }
     //TODO Load nds file
-    sNDSHeader header={};
+    tDSiHeader header = {};
+    // sNDSHeader header={};
     sNDSBanner banner={};
     char animatedIconData[0x1180] = {0};
     char extraTitles[2][0x100] = {0};
@@ -128,18 +129,29 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     std::ifstream f(filename);
     f.seekg(0);
-    f.read((char*)&header,sizeof(header));
-    bool extendedHeader = (header.headerSize == 0x4000);
-    if (header.bannerOffset == 0) {
-        logger.error(gLang.getString("builder_noNDSBanner"));
-        return "";
+    f.read((char*)&header,sizeof(header.ndshdr));
+    bool extendedHeader = (header.ndshdr.headerSize == 0x4000);
+    if (extendedHeader) {
+        f.seekg(0);
+        f.read((char*)&header,sizeof(header));
     }
     u16 headerCRC = crc16Modbus((char*)&header,0x15E);
-    if (headerCRC != header.headerCRC16) {
-        logger.error(gLang.parseString("builder_invalidHeaderCRC",headerCRC,header.headerCRC16));
+    if (headerCRC != header.ndshdr.headerCRC16) {
+        logger.error(gLang.parseString("builder_invalidHeaderCRC",headerCRC,header.ndshdr.headerCRC16));
+        f.close();
         return "";
     }
-    f.seekg(header.bannerOffset);
+    if (extendedHeader && (header.tid_high & 0xFF) > 0) {
+        logger.error(gLang.getString("builder_invalidROMType"));
+        f.close();
+        return "";
+    }
+    if (header.ndshdr.bannerOffset == 0) {
+        logger.error(gLang.getString("builder_noNDSBanner"));
+        f.close();
+        return "";
+    }
+    f.seekg(header.ndshdr.bannerOffset);
     f.read((char*)&banner,sizeof(banner));
     if ((banner.version & 0xFF) > 1) {
         f.read(extraTitles[0],0x100);
@@ -152,7 +164,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
     }
     if ((banner.version & 0x100) > 0) {
-        f.seekg(header.bannerOffset+0x1240);
+        f.seekg(header.ndshdr.bannerOffset+0x1240);
         f.read(animatedIconData,0x1180);
     }
     
@@ -208,11 +220,11 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     //TODO apply nds file to srl
     std::string dsiware = this->srl;
     if (randomTid) {
-        PS_GenerateRandomBytes(header.gameCode,4);
+        PS_GenerateRandomBytes(header.ndshdr.gameCode,4);
         for (int i = 0;i<4;i++) {
-            unsigned char c = header.gameCode[i];
+            unsigned char c = header.ndshdr.gameCode[i];
             if (c > 'Z' || c < 'A') c='A'+(c%26);
-            header.gameCode[i] = c;
+            header.ndshdr.gameCode[i] = c;
         }
     }
     if (!customTitle.empty()) {
@@ -227,12 +239,12 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     // Set header
     // could be 1 command but this is easier to read
-    dsiware.replace(0,0x0C,header.gameTitle,0x0C);
-    dsiware.replace(0x0C,0x04,header.gameCode,0x04);
-    char emagCode[] = {header.gameCode[0x03],header.gameCode[0x02],header.gameCode[0x01],header.gameCode[0x00]};
+    dsiware.replace(0,0x0C,header.ndshdr.gameTitle,0x0C);
+    dsiware.replace(0x0C,0x04,header.ndshdr.gameCode,0x04);
+    char emagCode[] = {header.ndshdr.gameCode[0x03],header.ndshdr.gameCode[0x02],header.ndshdr.gameCode[0x01],header.ndshdr.gameCode[0x00]};
     if (extendedHeader)
         dsiware.replace(0x230,0x04,emagCode,0x04);
-    dsiware.replace(0x10,0x02,header.makercode,0x02);
+    dsiware.replace(0x10,0x02,header.ndshdr.makercode,0x02);
     // Set Banner
 
      // basic banner info
