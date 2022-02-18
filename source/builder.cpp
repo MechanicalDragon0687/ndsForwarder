@@ -128,6 +128,17 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     std::ifstream f(filename);
     f.seekg(0);
+
+	// DSiWare check
+	tDSiHeader targetDSiWareCheck = {};
+    f.read((char*)&targetDSiWareCheck, sizeof(targetDSiWareCheck));
+    // DSiWare carts are 00
+	if ((targetDSiWareCheck.tid_high & 0xFF) > 0)
+	{
+		logger.error(gLang.parseString("builder_isDSiWare", filename.c_str()));
+        return "";
+	}
+    f.seekg(0);
     f.read((char*)&header,sizeof(header));
     bool extendedHeader = (header.headerSize == 0x4000);
     if (header.bannerOffset == 0) {
