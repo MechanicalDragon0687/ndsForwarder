@@ -74,7 +74,7 @@ extern "C" {
 
     }
     bool validExtension(const char* extension) {
-        char extensions[][5] = {".nds", ".srl"};
+        char extensions[][5] = {".nds", ".srl", ".ids"};
         for (int i=0;i<2;i++) {
             if (strcasecmp(extension,extensions[i])==0) return true;
         }
