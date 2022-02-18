@@ -21,8 +21,8 @@
     "builder_fail":"Failed to create forwarder.",
     "builder_ErrInRet":"Error in:%s\n%s\nret: 0x%xl",
     "builder_ErrIn":"Error in:%s\n%s",
-    "builder_invalidBannerCRC":"Invalid banner CRC %s and custom banner not used",
-    
+    "builder_invalidBannerCRC":"Invalid banner CRC %s",
+
     "config_foundTemplate":"Found %s on %s",
     "config_searchTemplates":"Checking %s for templates",
     "config_deduplicating":"deduplicating",
