@@ -158,7 +158,25 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     
 
     f.close();
-    
+    if (customBanner==false) {
+        char* bnr = (char*)&banner;
+        if (!(crc16Modbus(bnr+0x20,0x820) == banner.crcv1)) {
+            logger.error(gLang.parseString("builder_invalidBannerCRC","1"));
+            return "";
+        }
+        if (banner.version > 1 && !(crc16Modbus(bnr+0x20,0x920) == banner.crcv2)) {
+            logger.error(gLang.parseString("builder_invalidBannerCRC","2"));
+            return "";
+        }
+        if (banner.version > 2 && !(crc16Modbus(bnr+0x20,0xA20) == banner.crcv3)) {
+            logger.error(gLang.parseString("builder_invalidBannerCRC","3"));
+            return "";
+        }
+        if ((banner.version & 0x100) > 0 && !(crc16Modbus(animatedIconData,0x1180) == banner.crcv103)) {
+            logger.error(gLang.parseString("builder_invalidBannerCRC","4"));
+            return "";
+        }
+    }
     if (customBanner==true) {
         std::ifstream f(customBannerFilename);
         f.read((char*)&banner,sizeof(banner));
@@ -181,6 +199,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         if (R_SUCCEEDED(loadBmpAsIcon(customIconFilename,&banner)))
             banner.version &= 3;
     }
+    
     //TODO apply nds file to srl
     std::string dsiware = this->srl;
     if (randomTid) {
