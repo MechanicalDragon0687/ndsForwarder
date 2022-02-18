@@ -17,6 +17,7 @@
     "builder_searchBanner":"looking for banner at %s",
     "builder_searchIcon":"looking for custom bmp icon at %s",
     "builder_noNDSBanner":"NDS file contains no banner. This file is not supported.",
+    "builder_invalidHeaderCRC":"Header CRC was incorrect. Expected:%x Found: %x",
     "builder_fail":"Failed to create forwarder.",
     "builder_ErrInRet":"Error in:%s\n%s\nret: %xl",
     "builder_ErrIn":"Error in:%s\n%s",

@@ -134,6 +134,11 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         logger.error(gLang.getString("builder_noNDSBanner"));
         return "";
     }
+    u16 headerCRC = crc16Modbus((char*)&header,0x15E);
+    if (headerCRC != header.headerCRC16) {
+        logger.error(gLang.parseString("builder_invalidHeaderCRC",headerCRC,header.headerCRC16));
+        return "";
+    }
     f.seekg(header.bannerOffset);
     f.read((char*)&banner,sizeof(banner));
     if ((banner.version & 0xFF) > 1) {
