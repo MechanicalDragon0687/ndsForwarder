@@ -73,7 +73,13 @@ extern "C" {
             }
 
     }
-
+    bool validExtension(const char* extension) {
+        char extensions[][5] = {".nds", ".srl"};
+        for (int i=0;i<2;i++) {
+            if (strcasecmp(extension,extensions[i])==0) return true;
+        }
+        return false;
+    }
     Menu* generateMenu(std::filesystem::path path, Menu* prev) {
         delete prev;
         std::vector<MenuSelection*> entries;
@@ -83,7 +89,7 @@ extern "C" {
             std::string filename = entry.path().filename();
             if (
                 filename[0]=='.' || 
-                !(strcasecmp(entry.path().extension().c_str(),".nds")==0 || entry.is_directory()) ||
+                !(entry.is_directory() || validExtension(entry.path().extension().c_str())) ||
                 (filename=="_nds" && path.generic_string()=="/")
             )
                 continue;
@@ -236,7 +242,7 @@ extern "C" {
                                 break;
                             }
                             std::string filename = dEntry.path().filename();
-                            if (filename[0]=='.' || !(strcasecmp(dEntry.path().extension().c_str(),".nds")==0))
+                            if (filename[0]=='.' || !validExtension(dEntry.path().extension().c_str()))
                                 continue;
                             std::string shortname = shorten(dEntry.path().filename().generic_string(),25);
                             Dialog(target,0,0,320,240,{gLang.getString("menu_installing"),shortname},{},0).handle();
