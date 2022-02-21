@@ -226,7 +226,10 @@ extern "C" {
                         if (R_SUCCEEDED(buildResult)) {
                             Dialog(target,0,0,320,240,gLang.getString("menu_installComplete"),{gLang.getString("menu_ok")}).handle();
                         }else{
-                            Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),std::to_string((u32)buildResult)},{gLang.getString("menu_ok")}).handle();
+                            if (buildResult == -1) {
+                                
+                            }
+                            Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("dialog_checkLog"),gLang.parseString("format_hex",(u32)buildResult)},{gLang.getString("menu_ok")}).handle();
                         }
                     }
                     break;

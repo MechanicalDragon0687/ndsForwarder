@@ -141,7 +141,10 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         f.close();
         return "";
     }
-    if (extendedHeader && (header.tid_high & 0xFF) > 0) {
+    if (extendedHeader && (
+            (header.tid_high & 0xFF) > 0) &&
+            (memcmp(header.ndshdr.gameCode,"HNEA",4)!=0)
+    ) {
         logger.error(gLang.getString("builder_invalidROMType"));
         f.close();
         return "";
