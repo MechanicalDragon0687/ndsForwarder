@@ -131,16 +131,12 @@ typedef struct __DSiHeader {
 
 } tDSiHeader;
 
-
-#define __NDSHeader ((tNDSHeader *)0x02FFFE00)
-#define __DSiHeader ((tDSiHeader *)0x02FFE000)
-
-
 /*!
         \brief the NDS banner format.
         See gbatek for more information.
 */
-typedef struct sNDSBanner {
+
+typedef struct sNDSBannerEx {
   u16 version;                  //!< version of the banner.
   u16 crcv1;                              //!< 16 bit crc/checksum of the banner.
   u16 crcv2;                              //!< 16 bit crc/checksum of the banner.
@@ -149,12 +145,21 @@ typedef struct sNDSBanner {
   u8 reserved[22];
   u8 icon[512];                 //!< 32*32 icon of the game with 4 bit per pixel.
   u16 palette[16];              //!< the pallete of the icon.
-  u16 titles[6][128];   //!< title of the game in 6 different languages.
-} tNDSBanner;
+  u16 titles[16][128];   //!< title of the game in 6 different languages. extra 2+reserved come from extended format
+  u8 animated_icons[8][512]; // each unique frame has its own icon
+  u16 animated_palette[8][16]; // each icon has a palette ofc
+  u16 animated_animation[64]; // the animation instructions
+} tNDSBannerEx;
+
+
+#define NDS_BANNER_SIZE_v1 0xA00
+#define NDS_BANNER_SIZE_v2 0xA00
+#define NDS_BANNER_SIZE_v3 0xC00 // does this even exist
+#define NDS_BANNER_SIZE_v103 0x23C0
 
 
 /// this is my stuff vv
 void _DStoBMPorder(u8* store, u8 *source);
 void rotateInPlace90(u8 *source,u32 width,u32 height);
-void convertIconToBmp(u16* bmp, tNDSBanner* banner );
+void convertIconToBmp(u16* bmp, tNDSBannerEx* banner );
 Result LoadIconFromNDS(const char* filename, u16* output);

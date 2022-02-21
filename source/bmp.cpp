@@ -6,7 +6,7 @@
 #include "lang.hpp"
 
 Logger bmplogger("BmpHandler");
-Result loadBmpAsIcon(std::string filename, tNDSBanner* banner) {
+Result loadBmpAsIcon(std::string filename, tNDSBannerEx* banner) {
     BMPHeader bmpHeader={0};
     std::ifstream f(filename);
     if (f.fail()) {

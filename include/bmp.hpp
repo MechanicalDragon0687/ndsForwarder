@@ -27,4 +27,4 @@ typedef struct __attribute__((__packed__)) {
 void toDSPixelOrder(u8* store, u8* source);
 void convertImage(u8* store, u8* source);
 void convertColors(u16 palette[16], u32 BGR888_palette[16]);
-Result loadBmpAsIcon(std::string filename, tNDSBanner* banner);
+Result loadBmpAsIcon(std::string filename, tNDSBannerEx* banner);

@@ -1,4 +1,5 @@
 #include <3ds.h>
+#include "settings.hpp"
 #include "builder.hpp"
 #include <iostream>
 #include <fstream>
@@ -13,7 +14,6 @@
 #include "cia.h"
 #include "ticket.h"
 #include "bmp.hpp"
-#include "settings.hpp"
 #include "lang.hpp"
 
 Logger logger("Builder");
@@ -105,9 +105,9 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     //TODO Load nds file
     tDSiHeader header = {};
     // sNDSHeader header={};
-    sNDSBanner banner={};
-    char animatedIconData[0x1180] = {0};
-    char extraTitles[2][0x100] = {0};
+    sNDSBannerEx banner={};
+    // char animatedIconData[0x1180] = {0};
+    // char extraTitles[2][0x100] = {0};
     const u8 noAnimation[] = {0x01,0x00,0x00,0x01};
     std::string customBannerFilename = filename.substr(0,filename.find_last_of('.'))+".bin";
     std::string customIconFilename = filename.substr(0,filename.find_last_of('.'))+".bmp";
@@ -154,55 +154,50 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         f.close();
         return "";
     }
-    f.seekg(header.ndshdr.bannerOffset);
-    f.read((char*)&banner,sizeof(banner));
-    if ((banner.version & 0xFF) > 1) {
-        f.read(extraTitles[0],0x100);
+    u16 banner_version=1;
+    if (!customBanner) {
+        f.seekg(header.ndshdr.bannerOffset);
     }else{
-        memcpy(extraTitles[0],(u8*)&banner.titles[0],0x100);
-    }
-    if ((banner.version & 0xFF) > 2) {
-        f.read(extraTitles[0],0x100);
-    }else{
-        memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
-    }
-    if ((banner.version & 0x100) > 0) {
-        f.seekg(header.ndshdr.bannerOffset+0x1240);
-        f.read(animatedIconData,0x1180);
-    }
-    
-
-    f.close();
-    if (customBanner==true) {
-        std::ifstream f(customBannerFilename);
-        f.read((char*)&banner,sizeof(banner));
-        if ((banner.version & 0xFF) > 1) {
-            f.read(extraTitles[0],0x100);
-        }else{
-            memcpy(extraTitles[0],(u8*)&banner.titles[0],0x100);
-        }
-        if ((banner.version & 0xFF) > 2) {
-            f.read(extraTitles[0],0x100);
-        }else{
-            memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
-        }
-        if ((banner.version & 0x100) > 0) {
-            f.seekg(0x1240);
-            f.read(animatedIconData,0x1180);
-        }
         f.close();
-        
+        f.open(customBannerFilename);
     }
-    // verify the banner (loaded or not) has valid crc
-    char* bnr = (char*)&banner;
-    u16 expectedCRC = crc16Modbus(bnr+0x20,0x820);
+    f.read((char*)&banner_version,2);
+    f.seekg(0);
+    switch(banner_version) {
+        case 0x03:
+            f.read((char*)&banner,NDS_BANNER_SIZE_v3);
+            break;
+        case 0x103:
+            f.read((char*)&banner,NDS_BANNER_SIZE_v103);
+            break;
+        default:
+            f.read((char*)&banner,NDS_BANNER_SIZE_v1);
+            break;
+    }
+    f.close();
+
+        // if ((banner.version & 0xFF) > 1) {
+        //     f.read(extraTitles[0],0x100);
+        // }else{
+        //     memcpy(extraTitles[0],(u8*)&banner.titles[0],0x100);
+        // }
+        // if ((banner.version & 0xFF) > 2) {
+        //     f.read(extraTitles[0],0x100);
+        // }else{
+        //     memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
+        // }
+        // if ((banner.version & 0x100) > 0) {
+        //     f.seekg(0x1240);
+        //     f.read(animatedIconData,0x1180);
+
+    u16 expectedCRC = crc16Modbus(&(banner.icon),0x820);
     if (expectedCRC != banner.crcv1) {
         logger.debug(gLang.parseString("debug_crc",banner.crcv1,expectedCRC));
         logger.error(gLang.parseString("builder_invalidBannerCRC","1"));
         return "";
     }
     if (banner.version > 1) {
-        expectedCRC = crc16Modbus(bnr+0x20,0x920);
+        expectedCRC = crc16Modbus(&(banner.icon),0x920);
         if (expectedCRC != banner.crcv2) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv2,expectedCRC));
             logger.error(gLang.parseString("builder_invalidBannerCRC","2"));
@@ -210,7 +205,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         }
     }
     if (banner.version > 2) {
-        expectedCRC = crc16Modbus(bnr+0x20,0xA20);
+        expectedCRC = crc16Modbus(&(banner.icon),0xA20);
         if (expectedCRC != banner.crcv3) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv3,expectedCRC));
             logger.error(gLang.parseString("builder_invalidBannerCRC","3"));
@@ -219,7 +214,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     
     if ((banner.version & 0x100) > 0) {
-        expectedCRC = crc16Modbus(animatedIconData,0x1180);
+        expectedCRC = crc16Modbus(&(banner.animated_icons),0x1180);
         if (expectedCRC != banner.crcv103) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv103,expectedCRC));
             logger.error(gLang.parseString("builder_invalidBannerCRC","4"));
@@ -248,33 +243,36 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     if (!customTitle.empty()) {
         uint16_t cTitle[0x80] = {0};
         utf8_to_utf16(cTitle, (u8*)customTitle.c_str(), 0x80);
-        for(int i=0;i<6;i++) {
+        for(int i=0;i<8;i++) {
             memcpy(banner.titles[i], cTitle, 0x80 * sizeof(uint16_t));
         }
-        for(int i=0;i<2;i++) {
-            memcpy(extraTitles[i], cTitle, 0x80 * sizeof(uint16_t));
-        }
+        // for(int i=0;i<2;i++) {
+        //     memcpy(extraTitles[i], cTitle, 0x80 * sizeof(uint16_t));
+        // }
     }
     // Set header
     // could be 1 command but this is easier to read
     dsiware.replace(0,0x0C,header.ndshdr.gameTitle,0x0C);
     dsiware.replace(0x0C,0x04,header.ndshdr.gameCode,0x04);
-    char emagCode[] = {header.ndshdr.gameCode[0x03],header.ndshdr.gameCode[0x02],header.ndshdr.gameCode[0x01],header.ndshdr.gameCode[0x00]};
-    if (extendedHeader)
-        dsiware.replace(0x230,0x04,emagCode,0x04);
+    char emagCode[0x04] = {};
+    if (!extendedHeader)
+        memcpyrev(emagCode,header.ndshdr.gameCode,4);
+    else
+        memcpy(emagCode,(char*)&header.tid_low,4);
+    dsiware.replace(0x230,0x04,emagCode,0x04);
     dsiware.replace(0x10,0x02,header.ndshdr.makercode,0x02);
     // Set Banner
 
      // basic banner info
      dsiware.replace(this->srlBannerLocation+0x20,0x200,(char*)banner.icon,0x200); // icon
      dsiware.replace(this->srlBannerLocation+0x220,0x20,(char*)banner.palette,0x20); // palette
-     dsiware.replace(this->srlBannerLocation+0x240,0x600,(char*)banner.titles,0x600); // titles
-     dsiware.replace(this->srlBannerLocation+0x840,0x200,(char*)extraTitles,0x200); // titles
+     dsiware.replace(this->srlBannerLocation+0x240,0x600,(char*)banner.titles,0x800); // titles
+//     dsiware.replace(this->srlBannerLocation+0x840,0x200,(char*)banner.titles[0x07],0x200); // titles
 //   dsiware.replace(this->srlBannerLocation,sizeof(banner),&banner,sizeof(banner));
 
     // animated banner
     if ((banner.version & 0x100) > 0) {
-         dsiware.replace(this->srlBannerLocation + 0x1240,0x1180,animatedIconData,0x1180);
+         dsiware.replace(this->srlBannerLocation + 0x1240,0x1180,(char*)banner.animated_icons,0x1180);
     }else{
         // fill all icon data with default
         // then replace animation sequence with static image

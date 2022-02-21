@@ -33,7 +33,7 @@ void _DStoBMPorder(u8* store, u8 *source) {
       store[1+x*2]=(tmp[x] >> 4) & 0xF;
   }
 }
-void convertIconToBmp(u16* bmp, tNDSBanner* banner ) {
+void convertIconToBmp(u16* bmp, tNDSBannerEx* banner ) {
 	u8 store[0x400]={0};
 	_DStoBMPorder(store,banner->icon);
 	rotateInPlace90(store,32,32);
@@ -62,12 +62,12 @@ Result LoadIconFromNDS(const char* filename, u16* output) {
         return -1;
     }
     tNDSHeader* header = malloc(sizeof(tNDSHeader));
-	tNDSBanner* banner=malloc(sizeof(tNDSBanner));
+	tNDSBannerEx* banner=malloc(sizeof(tNDSBannerEx));
 
 	 fread(header,sizeof(tNDSHeader),1,f);
 	 if (header->bannerOffset > 0) {
 	 	fseek(f,header->bannerOffset,SEEK_SET);
-		fread(banner,sizeof(tNDSBanner),1,f);
+		fread(banner,NDS_BANNER_SIZE_v1,1,f);
         fclose(f);
         free(header);
         header=NULL;
