@@ -195,21 +195,36 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     // verify the banner (loaded or not) has valid crc
     char* bnr = (char*)&banner;
-    if (!(crc16Modbus(bnr+0x20,0x820) == banner.crcv1)) {
+    u16 expectedCRC = crc16Modbus(bnr+0x20,0x820);
+    if (expectedCRC != banner.crcv1) {
+        logger.debug(gLang.parseString("debug_crc",banner.crcv1,expectedCRC));
         logger.error(gLang.parseString("builder_invalidBannerCRC","1"));
         return "";
     }
-    if (banner.version > 1 && !(crc16Modbus(bnr+0x20,0x920) == banner.crcv2)) {
-        logger.error(gLang.parseString("builder_invalidBannerCRC","2"));
-        return "";
+    if (banner.version > 1) {
+        expectedCRC = crc16Modbus(bnr+0x20,0x920);
+        if (expectedCRC != banner.crcv2) {
+            logger.debug(gLang.parseString("debug_crc",banner.crcv2,expectedCRC));
+            logger.error(gLang.parseString("builder_invalidBannerCRC","2"));
+            return "";
+        }
     }
-    if (banner.version > 2 && !(crc16Modbus(bnr+0x20,0xA20) == banner.crcv3)) {
-        logger.error(gLang.parseString("builder_invalidBannerCRC","3"));
-        return "";
+    if (banner.version > 2) {
+        expectedCRC = crc16Modbus(bnr+0x20,0xA20);
+        if (expectedCRC != banner.crcv3) {
+            logger.debug(gLang.parseString("debug_crc",banner.crcv3,expectedCRC));
+            logger.error(gLang.parseString("builder_invalidBannerCRC","3"));
+            return "";
+        }
     }
-    if ((banner.version & 0x100) > 0 && !(crc16Modbus(animatedIconData,0x1180) == banner.crcv103)) {
-        logger.error(gLang.parseString("builder_invalidBannerCRC","4"));
-        return "";
+    
+    if ((banner.version & 0x100) > 0) {
+        expectedCRC = crc16Modbus(animatedIconData,0x1180);
+        if (expectedCRC != banner.crcv103) {
+            logger.debug(gLang.parseString("debug_crc",banner.crcv103,expectedCRC));
+            logger.error(gLang.parseString("builder_invalidBannerCRC","4"));
+            return "";
+        }
     }
     
     if(customBMPIcon) {

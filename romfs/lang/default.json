@@ -50,6 +50,7 @@
     "debug_createdCIA":"Created cia file data",
     "debug_writingToFile":"Writing to file",
     "debug_installedForwarder":"Installed Forwarder",
-
+    "debug_crc":"foundCRC: 0x%x  Expected 0x%x",
+    
     "format_hex":"0x%x"
 }
