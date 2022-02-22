@@ -130,7 +130,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     std::ifstream f(filename);
     f.seekg(0);
     f.read((char*)&header,sizeof(header.ndshdr));
-    bool extendedHeader = (header.ndshdr.headerSize == 0x4000);
+    bool extendedHeader = (header.ndshdr.unitCode != 0x00);
     if (extendedHeader) {
         f.seekg(0);
         f.read((char*)&header,sizeof(header));
