@@ -155,14 +155,17 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         return "";
     }
     u16 banner_version=1;
+    u32 seekLocation = 0;
     if (!customBanner) {
+        seekLocation = header.ndshdr.bannerOffset;
         f.seekg(header.ndshdr.bannerOffset);
+
     }else{
         f.close();
         f.open(customBannerFilename);
     }
     f.read((char*)&banner_version,2);
-    f.seekg(0);
+    f.seekg(seekLocation);
     switch(banner_version) {
         case 0x03:
             f.read((char*)&banner,NDS_BANNER_SIZE_v3);
@@ -175,21 +178,11 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
             break;
     }
     f.close();
-
-        // if ((banner.version & 0xFF) > 1) {
-        //     f.read(extraTitles[0],0x100);
-        // }else{
-        //     memcpy(extraTitles[0],(u8*)&banner.titles[0],0x100);
-        // }
-        // if ((banner.version & 0xFF) > 2) {
-        //     f.read(extraTitles[0],0x100);
-        // }else{
-        //     memcpy(extraTitles[1],(u8*)&banner.titles[0],0x100);
-        // }
-        // if ((banner.version & 0x100) > 0) {
-        //     f.seekg(0x1240);
-        //     f.read(animatedIconData,0x1180);
-
+    #ifdef DEBUG
+    std::ofstream dbgfile(filename+".dbgbnr");
+    dbgfile.write((char*)&banner,sizeof(banner));
+    dbgfile.close();
+    #endif
     u16 expectedCRC = crc16Modbus(&(banner.icon),0x820);
     if (expectedCRC != banner.crcv1) {
         logger.debug(gLang.parseString("debug_crc",banner.crcv1,expectedCRC));
