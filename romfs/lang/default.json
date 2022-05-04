@@ -22,7 +22,7 @@
     "builder_ErrInRet":"Error in:%s\n%s\nret: 0x%xl",
     "builder_ErrIn":"Error in:%s\n%s",
     "builder_invalidBannerCRC":"Invalid banner CRC %s",
-    "builder_invalidROMType":"Invalid ROM Type. Only NDS/DSI game roms are supported.",
+    "builder_invalidROMType":"Invalid ROM Type. Only NDS/DSI game roms are fully supported.",
 
     "config_foundTemplate":"Found %s on %s",
     "config_searchTemplates":"Checking %s for templates",
