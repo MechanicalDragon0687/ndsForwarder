@@ -132,6 +132,7 @@ int main()
 		//Scan all the inputs. This should be done once for each frame
 		hidScanInput();
 		u32 kDown = hidKeysDown();
+		u32 kHeld = hidKeysHeld();
 
 		// Touch Handling
 		touchPosition touch;
@@ -142,7 +143,7 @@ int main()
 
 		if (kDown & KEY_START) break; // break in order to return to hbmenu
 
-		if (kDown & KEY_L) {
+		if (kHeld & KEY_L) {
 			config->interactKey(&kDown);
 		}else{
 
