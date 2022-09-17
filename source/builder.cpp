@@ -189,10 +189,14 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     if (banner.version > 1) {
         expectedCRC = crc16Modbus(&(banner.icon),0x920);
-        if (expectedCRC != banner.crcv2) {
+        if (expectedCRC != banner.crcv2 ) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv2,expectedCRC));
             logger.error(gLang.parseString("builder_invalidBannerCRC","2"));
-            return "";
+            if (!force) { 
+                return "";
+            }else{
+                banner.version = 1;
+            }
         }
     }
     if (banner.version > 2) {
@@ -200,7 +204,11 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         if (expectedCRC != banner.crcv3) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv3,expectedCRC));
             logger.error(gLang.parseString("builder_invalidBannerCRC","3"));
-            return "";
+            if (!force) { 
+                return "";
+            }else{
+                banner.version = 1;
+            }
         }
     }
     
@@ -209,7 +217,11 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         if (expectedCRC != banner.crcv103) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv103,expectedCRC));
             logger.error(gLang.parseString("builder_invalidBannerCRC","4"));
-            return "";
+            if (!force) { 
+                return "";
+            }else{
+                banner.version = 1;
+            }
         }
     }
     
