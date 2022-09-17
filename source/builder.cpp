@@ -102,6 +102,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     if (filename.size() > this->launchPathLen) {
         return "";
     }
+    logger.debug(gLang.parseString("debug_settings",randomTid,force,customTitle.c_str()));
     //TODO Load nds file
     tDSiHeader header = {};
     // sNDSHeader header={};
@@ -323,7 +324,7 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
     u8 contentID[4]={0x00,0x02,0x03,0x04};
     PS_GenerateRandomBytes(contentID+1,3);
 
-    this->sections["content"] = buildSRL(filename, randomTid, customTitle);
+    this->sections["content"] = buildSRL(filename, randomTid, customTitle, force);
     if (this->sections["content"].size() == 0) {
         logger.error(gLang.getString("builder_fail"));
         return -1;

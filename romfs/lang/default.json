@@ -31,7 +31,7 @@
     "config_randomTID":"Random TID",
     "config_customTitle":"Custom Title",
     "config_forceInstall":"Force Install",
-    
+
     "menu_ok":"OK",
     "menu_cancel":"Cancel",
     "menu_yes":"Yes",
@@ -54,6 +54,7 @@
     "debug_writingToFile":"Writing to file",
     "debug_installedForwarder":"Installed Forwarder",
     "debug_crc":"foundCRC: 0x%x  Expected 0x%x",
-    
+    "debug_settings":"Settings: RandomTid: %d; Force Install: %d; Custom Title: %s",
+
     "format_hex":"0x%x"
 }
