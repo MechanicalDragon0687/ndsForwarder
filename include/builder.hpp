@@ -27,7 +27,7 @@ class Builder {
     u8 rsaSignExponent[0x100];
     std::string ciaCertChain;
     std::string ticketCertChain;
-    std::string buildSRL(std::string filename, bool randomTid=false, std::string customTitle="");
+    std::string buildSRL(std::string filename, bool randomTid=false, std::string customTitle="", bool force=false);
     std::string buildTMD(u8* contentId);
     std::string getTWLTID(u8* srl);
     std::string buildTicket();
@@ -37,6 +37,6 @@ class Builder {
     public:
     Result initialize();
     Result loadTemplate(std::string templateName);
-    Result buildCIA(std::string filename, bool randomTid=false, std::string customTitle="");
+    Result buildCIA(std::string filename, bool randomTid=false, std::string customTitle="", bool force=false);
     Result installCIA();
 };

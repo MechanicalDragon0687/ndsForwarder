@@ -138,24 +138,27 @@ int main()
 		hidTouchRead(&touch);
 		
 		if (kDown & KEY_TOUCH) config->interact(&touch);
-
-		// Button Handling
+			// Button Handling
 
 		if (kDown & KEY_START) break; // break in order to return to hbmenu
 
-		else if (kDown & KEY_DOWN) menu->down();
+		if (kDown & KEY_L) {
+			config->interactKey(&kDown);
+		}else{
 
-		else if (kDown & KEY_UP) menu->up();
-		 
-		else if (kDown & KEY_RIGHT) menu->pageDown();
+			if (kDown & KEY_DOWN) menu->down();
 
-		else if (kDown & KEY_LEFT) menu->pageUp();
+			else if (kDown & KEY_UP) menu->up();
+			
+			else if (kDown & KEY_RIGHT) menu->pageDown();
 
-		else if(kDown & KEY_A) menu->action();
+			else if (kDown & KEY_LEFT) menu->pageUp();
+
+			else if(kDown & KEY_A) menu->action();
 
 
-		else if(kDown & KEY_B) menu = menu->back();
-
+			else if(kDown & KEY_B) menu = menu->back();
+		}
 		// Draw Screens
 
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);

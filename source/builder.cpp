@@ -98,7 +98,7 @@ Result Builder::initialize() {
 
     return 0;
 }
-std::string Builder::buildSRL(std::string filename, bool randomTid, std::string customTitle) {
+std::string Builder::buildSRL(std::string filename, bool randomTid, std::string customTitle, bool force) {
     if (filename.size() > this->launchPathLen) {
         return "";
     }
@@ -304,7 +304,7 @@ void writeArray(const void* data, u32 size) {
     std::cout << std::endl;
 }
 #endif
-Result Builder::buildCIA(std::string filename, bool randomTid, std::string customTitle) {
+Result Builder::buildCIA(std::string filename, bool randomTid, std::string customTitle, bool force) {
 
 //    const u16 contentCount = 1;
     // GET RANDOM CONTENT ID

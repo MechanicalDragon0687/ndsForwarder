@@ -28,7 +28,10 @@
     "config_searchTemplates":"Checking %s for templates",
     "config_deduplicating":"deduplicating",
     "config_noTemplates":"NO TEMPLATES FOUND",
-
+    "config_randomTID":"Random TID",
+    "config_customTitle":"Custom Title",
+    "config_forceInstall":"Force Install",
+    
     "menu_ok":"OK",
     "menu_cancel":"Cancel",
     "menu_yes":"Yes",
