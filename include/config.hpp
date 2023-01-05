@@ -11,7 +11,7 @@ class Config {
     bool customTitle;
     bool forceInstall;
     std::vector<std::string> templates;
-    u8 currentTemplate;
+    unsigned int currentTemplate;
     unsigned long dsiwareCount;
     void draw(bool interactive=false);
     void interact(touchPosition *touch);

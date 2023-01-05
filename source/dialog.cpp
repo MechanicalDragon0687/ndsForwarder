@@ -44,9 +44,14 @@ int Dialog::handle() {
         if (pos.px != oldPos.px || pos.py != oldPos.py) {
             // check tap position
         }
+        
         if (kDown & KEY_LEFT) {
-            this->selected--;
-            if (this->selected < 0) this->selected=this->options.size()-1;
+            if (this->selected > 0) {
+                this->selected--;
+            }
+            else if(this->options.size() > 0) { 
+                this->selected=this->options.size()-1;
+            }
         }else if(kDown & KEY_RIGHT) {
             this->selected++;
             if (this->selected >= this->options.size()) this->selected=0;

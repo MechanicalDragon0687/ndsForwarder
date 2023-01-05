@@ -8,7 +8,7 @@ class Dialog {
     std::vector<std::string> message;
     C3D_RenderTarget* target;
     float x,y,width,height;
-    int selected;
+    unsigned int selected;
     void draw();
     public:
     int handle();

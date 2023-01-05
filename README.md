@@ -20,9 +20,11 @@ Thanks to RocketRobz and the DS-Homebrew team for all the nds-bootstrap and TWiL
 
 Thanks to Evie (pk11) and the Universal Updater folks for helping bring things to the Universal Updater with automatic install of sd card files.
 
+Thanks to Evie also for some code cleanup/proper handling of non-ascii strings
+
 Thanks to Oreo639, Piepie62, Fenrir, and everyone else who helped me in my development career.
 
-Thanks to lifehackerhansol for helping me test
+Thanks to lifehackerhansol, GanonTheDork for helping me test
 
 Finally, thanks to the DevKitPro team for the toolchain (wintermute et al). Without that, homebrew just wouldn't be a thing.
 

@@ -199,12 +199,12 @@ extern "C" {
                         Dialog(target,0,0,320,240,{gLang.getString("menu_tooManyDSiWare"),std::to_string(config->dsiwareCount)},{gLang.getString("menu_ok")}).handle();
                         break;
                     }
-                    if (R_FAILED(builder->loadTemplate(config->templates.at(config->currentTemplate)))) {
+                    if (!(builder->loadTemplate(config->templates.at(config->currentTemplate)))->isSuccess()) {
                         Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("menu_noTemplate")},{gLang.getString("menu_ok")}).handle();
                         break;
                     }
                     if (Dialog(target,0,0,320,240,{gLang.getString("menu_installTitleQ"),entry.path.filename().generic_string()},{gLang.getString("menu_yes"),gLang.getString("menu_no")}).handle()==0) {
-                        Result buildResult = 0;
+                        ReturnResult* buildResult=nullptr;
                         if (config!=nullptr) {
                             std::string customTitle="";
                             if (config->customTitle) {
@@ -217,25 +217,25 @@ extern "C" {
                                 customTitle=std::string(customTitleBuffer);
                             }
                             buildResult = builder->loadTemplate(config->templates.at(config->currentTemplate));
-                            if (R_SUCCEEDED(buildResult))
+                            if (buildResult->isSuccess()) {
+                                delete buildResult;
                                 buildResult = builder->buildCIA(entry.path.generic_string(),config->randomTID,customTitle,config->forceInstall);
+                            }
                         } else {
                             buildResult = builder->buildCIA(entry.path.generic_string());
                         }
                         
-                        if (R_SUCCEEDED(buildResult)) {
+                        if (buildResult->isSuccess()) {
                             Dialog(target,0,0,320,240,gLang.getString("menu_installComplete"),{gLang.getString("menu_ok")}).handle();
                         }else{
-                            if (buildResult == -1) {
-                                
-                            }
-                            Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("dialog_checkLog"),gLang.parseString("format_hex",(u32)buildResult)},{gLang.getString("menu_ok")}).handle();
+                            Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("dialog_checkLog"),gLang.parseString("format_hex",(u32)buildResult->code)},{gLang.getString("menu_ok")}).handle();
                         }
+                        delete buildResult;
                     }
                     break;
                 case Install_All:
                     if (Dialog(target,0,0,320,240,{gLang.getString("menu_installTitleQ"),gLang.getString("menu_allForwarders"),(!entry.path.filename().generic_string().empty())?entry.path.filename().generic_string():"/"},{gLang.getString("menu_yes"),gLang.getString("menu_no")}).handle()==0) {
-                        if (R_FAILED(builder->loadTemplate(config->templates.at(config->currentTemplate)))) {
+                        if (!(builder->loadTemplate(config->templates.at(config->currentTemplate)))->isSuccess()) {
                             Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),gLang.getString("menu_noTemplate")},{gLang.getString("menu_ok")}).handle();
                             break;
                         }
@@ -249,7 +249,7 @@ extern "C" {
                                 continue;
                             std::string shortname = shorten(dEntry.path().filename().generic_string(),25);
                             Dialog(target,0,0,320,240,{gLang.getString("menu_installing"),shortname},{},0).handle();
-                            Result buildResult = 0;
+                            ReturnResult* buildResult=nullptr;
                             if (config!=nullptr) {
                                 std::string customTitle="";
                                 if (config->customTitle) {
@@ -265,11 +265,12 @@ extern "C" {
                             } else {
                                 buildResult = builder->buildCIA(dEntry.path().generic_string());
                             }
-                            if (R_FAILED(buildResult)) {
-                                Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),shortname,std::to_string((u32)buildResult)},{gLang.getString("menu_ok")}).handle();
+                            if (!buildResult->isSuccess()) {
+                                Dialog(target,0,0,320,240,{gLang.getString("menu_installFailed"),shortname,std::to_string((u32)buildResult->code)},{gLang.getString("menu_ok")}).handle();
                             }else{
                                 config->dsiwareCount++;
                             }
+                            delete buildResult;
                         }
                         Dialog(target,0,0,320,240,gLang.getString("menu_installComplete"),{gLang.getString("menu_ok")}).handle();
                     }
@@ -277,6 +278,8 @@ extern "C" {
                 case OpenFolder:
                     while (this->queue.size() > 0) this->queue.pop();
                     return generateMenu(entry.path,this);
+                default:
+                    break; 
             }
             this->queue.pop();
         }

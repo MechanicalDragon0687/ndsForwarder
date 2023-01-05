@@ -4,25 +4,27 @@
 #pragma once
 #include <3ds.h>
 #include <citro2d.h>
-typedef struct sNDSHeader {
+typedef struct __attribute__((__packed__)) {
         char gameTitle[12];                     //!< 12 characters for the game title.
         char gameCode[4];                       //!< 4 characters for the game code.
         char makercode[2];                      //!< identifies the (commercial) developer.
         u8 unitCode;                            //!< identifies the required hardware.
         u8 deviceType;                          //!< type of device in the game card
         u8 deviceSize;                          //!< capacity of the device (1 << n Mbit)
-        u8 reserved1[9];
+        u8 reserved1[7];
+        u8 dsi_flags;
+        u8 dsi_region;
         u8 romversion;                          //!< version of the ROM.
         u8 flags;                                       //!< bit 2: auto-boot flag.
 
         u32 arm9romOffset;                      //!< offset of the arm9 binary in the nds file.
-        void *arm9executeAddress;               //!< adress that should be executed after the binary has been copied.
-        void *arm9destination;          //!< destination address to where the arm9 binary should be copied.
+        u32 arm9executeAddress;               //!< adress that should be executed after the binary has been copied.
+        u32 arm9destination;          //!< destination address to where the arm9 binary should be copied.
         u32 arm9binarySize;                     //!< size of the arm9 binary.
 
         u32 arm7romOffset;                      //!< offset of the arm7 binary in the nds file.
-        void *arm7executeAddress;               //!< adress that should be executed after the binary has been copied.
-        void *arm7destination;          //!< destination address to where the arm7 binary should be copied.
+        u32 arm7executeAddress;               //!< adress that should be executed after the binary has been copied.
+        u32 arm7destination;          //!< destination address to where the arm7 binary should be copied.
         u32 arm7binarySize;                     //!< size of the arm7 binary.
 
         u32 filenameOffset;                     //!< File Name Table (FNT) offset.
@@ -58,7 +60,7 @@ typedef struct sNDSHeader {
 
 } tNDSHeader;
 
-typedef struct __DSiHeader {
+typedef struct __attribute__((__packed__)) {
         tNDSHeader ndshdr;
         u32 debugRomSource;                     //!< debug ROM offset.
         u32 debugRomSize;                       //!< debug size.

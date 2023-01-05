@@ -15,15 +15,17 @@
 #include "ticket.h"
 #include "bmp.hpp"
 #include "lang.hpp"
+#include "error.hpp"
 
 Logger logger("Builder");
 
 
-Result Builder::loadTemplate(std::string templateName) {
+ReturnResult* Builder::loadTemplate(std::string templateName) {
     this->launchPathLen = 0;
     this->launchPathLocation=0;
-    if (templateName.empty())
-        return -1;
+    if (templateName.empty()) {
+        return new ReturnResult(ERROR_TEMPLATE|ERROR_TEMPLATE_PATH,"");
+    }
     std::string srlFileName = templateName + ".nds";//ROMFS_SRL;
     std::string srlTemplate = templateName + ".fwd";//ROMFS_TEMPLATE;
     if (fileExists(SDCARD_TEMPLATE_DIR+srlFileName)) {
@@ -33,7 +35,7 @@ Result Builder::loadTemplate(std::string templateName) {
             logger.info(gLang.parseString("builder_loadingTemplate",templateName.c_str()));
         }else{
             logger.error(gLang.parseString("builder_missingTemplate",(std::string(SDCARD_TEMPLATE_DIR)+srlTemplate).c_str(),(std::string(SDCARD_TEMPLATE_DIR)+srlFileName).c_str()));
-            return -1;
+            return new ReturnResult(ERROR_TEMPLATE|ERROR_TEMPLATE_FWD_NOT_FOUND,"");
         }
     }else if(fileExists(ROMFS_TEMPLATE_DIR+srlTemplate) && fileExists(ROMFS_TEMPLATE_DIR+srlFileName)) {
         logger.info(gLang.parseString("builder_defaultTemplate",templateName.c_str()));
@@ -41,19 +43,19 @@ Result Builder::loadTemplate(std::string templateName) {
         srlFileName=ROMFS_TEMPLATE_DIR+srlFileName;
     }else{
         logger.info(gLang.parseString("builder_missingSRL",templateName.c_str(),(SDCARD_TEMPLATE_DIR).c_str()));
-        return -1;
+            return new ReturnResult(ERROR_TEMPLATE|ERROR_TEMPLATE_NDS_NOT_FOUND,"");
     }
     this->srl = readEntireFile(srlFileName);
     memcpy(&this->srlBannerLocation,this->srl.c_str() + 0x68,4);
     
     parseTemplate(srlTemplate);
-    if (this->launchPathLocation == 0 || this->launchPathLen==0) return -1;
-    return 0;
+    if (this->launchPathLocation == 0 || this->launchPathLen==0) return new ReturnResult(ERROR_TEMPLATE|ERROR_TEMPLATE_PARSE,"");
+    return new ReturnResult(ERROR_SUCCESS,"");
 
 }
 
 
-Result Builder::initialize() {
+ReturnResult* Builder::initialize() {
 
     
     // READ CERTCHAIN FROM CERTS.DB
@@ -90,17 +92,17 @@ Result Builder::initialize() {
             //char buf[50]={0};
             //sprintf(buf,"Failed to open certs.db file. res: %lx",res);
             logger.error(gLang.parseString("builder_noCertsDB",res));
-            return res;
+            return new ReturnResult(res,"");
         }
         this->launchPathLen = 0;
         this->launchPathLocation=0;
     }
 
-    return 0;
+    return new ReturnResult(ERROR_SUCCESS,"");
 }
-std::string Builder::buildSRL(std::string filename, bool randomTid, std::string customTitle, bool force) {
+ReturnResult* Builder::buildSRL(std::string filename, bool randomTid, std::string customTitle, bool force) {
     if (filename.size() > this->launchPathLen) {
-        return "";
+        return new ReturnResult(ERROR_SRL|ERROR_PATH,"");
     }
     logger.debug(gLang.parseString("debug_settings",randomTid,force,customTitle.c_str()));
     //TODO Load nds file
@@ -138,20 +140,22 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     u16 headerCRC = crc16Modbus((char*)&header,0x15E);
     if (headerCRC != header.ndshdr.headerCRC16) {
-        logger.error(gLang.parseString("builder_invalidHeaderCRC",headerCRC,header.ndshdr.headerCRC16));
+        std::string message = gLang.parseString("builder_invalidHeaderCRC",headerCRC,header.ndshdr.headerCRC16);
+        logger.error(message);
         f.close();
-        return "";
+        return new ReturnResult(ERROR_SRL|ERROR_CRC|0x01,message);
     }
-    if (extendedHeader && header.tid_high != 0) {
+    if (extendedHeader && (header.tid_high & 0xFF) != 0) {
         logger.warn(gLang.getString("builder_invalidROMType"));
         // There are some system titles and such that wont work, but the warning log should suffice
         // f.close();
         // return "";
     }
     if (header.ndshdr.bannerOffset == 0) {
-        logger.error(gLang.getString("builder_noNDSBanner"));
+        std::string message = gLang.getString("builder_noNDSBanner");
+        logger.error(message);
         f.close();
-        return "";
+        return new ReturnResult(ERROR_SRL|ERROR_BANNERLOC,message);
     }
     u16 banner_version=1;
     u32 seekLocation = 0;
@@ -185,16 +189,18 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     u16 expectedCRC = crc16Modbus(&(banner.icon),0x820);
     if (expectedCRC != banner.crcv1) {
         logger.debug(gLang.parseString("debug_crc",banner.crcv1,expectedCRC));
-        logger.error(gLang.parseString("builder_invalidBannerCRC","1"));
-        return "";
+        std::string message = gLang.parseString("builder_invalidBannerCRC","1");
+        logger.error(message);
+        return new ReturnResult(ERROR_SRL|ERROR_CRC_BANNER_1,message);
     }
     if (banner.version > 1) {
         expectedCRC = crc16Modbus(&(banner.icon),0x920);
         if (expectedCRC != banner.crcv2 ) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv2,expectedCRC));
-            logger.error(gLang.parseString("builder_invalidBannerCRC","2"));
+            std::string message = gLang.parseString("builder_invalidBannerCRC","2");
+            logger.error(message);
             if (!force) { 
-                return "";
+                return new ReturnResult(ERROR_SRL|ERROR_CRC_BANNER_2,message);
             }else{
                 banner.version = 1;
             }
@@ -204,9 +210,10 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         expectedCRC = crc16Modbus(&(banner.icon),0xA20);
         if (expectedCRC != banner.crcv3) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv3,expectedCRC));
-            logger.error(gLang.parseString("builder_invalidBannerCRC","3"));
+            std::string message = gLang.parseString("builder_invalidBannerCRC","3");
+            logger.error(message);
             if (!force) { 
-                return "";
+                return new ReturnResult(ERROR_SRL|ERROR_CRC_BANNER_3,message);
             }else{
                 banner.version = 1;
             }
@@ -217,9 +224,10 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
         expectedCRC = crc16Modbus(&(banner.animated_icons),0x1180);
         if (expectedCRC != banner.crcv103) {
             logger.debug(gLang.parseString("debug_crc",banner.crcv103,expectedCRC));
-            logger.error(gLang.parseString("builder_invalidBannerCRC","4"));
+            std::string message = gLang.parseString("builder_invalidBannerCRC","4");
+            logger.error(message);
             if (!force) { 
-                return "";
+                return new ReturnResult(ERROR_SRL|ERROR_CRC_BANNER_ANIMATED,message);
             }else{
                 banner.version = 1;
             }
@@ -236,13 +244,23 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     }
     //TODO apply nds file to srl
     std::string dsiware = this->srl;
+    logger.debug("TID is:");
+    logger.debug(header.ndshdr.gameCode);
+
     if (randomTid) {
-        PS_GenerateRandomBytes(header.ndshdr.gameCode,4);
+        unsigned char randomizedTid[5] = {'A','B','C','D','\0'};
+        PS_GenerateRandomBytes(randomizedTid,4);
         for (int i = 0;i<4;i++) {
-            unsigned char c = header.ndshdr.gameCode[i];
+            unsigned char c = randomizedTid[i];
             if (c > 'Z' || c < 'A') c='A'+(c%26);
-            header.ndshdr.gameCode[i] = c;
+            randomizedTid[i] = c;
         }
+        memcpy(&header.ndshdr.gameCode,randomizedTid,4);
+        if(extendedHeader) { // randomize title id as well
+            memcpyrev(&header.tid_low,randomizedTid,4);
+        }
+        logger.debug("Set TID To:");
+        logger.debug(header.ndshdr.gameCode);
     }
     if (!customTitle.empty()) {
         uint16_t cTitle[0x80] = {0};
@@ -259,10 +277,12 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     dsiware.replace(0,0x0C,header.ndshdr.gameTitle,0x0C);
     dsiware.replace(0x0C,0x04,header.ndshdr.gameCode,0x04);
     char emagCode[0x04] = {};
-    if (!extendedHeader)
+    if (!extendedHeader) {
         memcpyrev(emagCode,header.ndshdr.gameCode,4);
-    else
+    }
+    else {
         memcpy(emagCode,(char*)&header.tid_low,4);
+    }
     dsiware.replace(0x230,0x04,emagCode,0x04);
     dsiware.replace(0x10,0x02,header.ndshdr.makercode,0x02);
     // Set Banner
@@ -308,7 +328,7 @@ std::string Builder::buildSRL(std::string filename, bool randomTid, std::string 
     of.close();
 #endif
     //build twl
-    return dsiware;
+    return new ReturnResult(ERROR_SUCCESS,dsiware);
 }
 #ifdef DEBUG
 void writeArray(const void* data, u32 size) {
@@ -317,21 +337,34 @@ void writeArray(const void* data, u32 size) {
     std::cout << std::endl;
 }
 #endif
-Result Builder::buildCIA(std::string filename, bool randomTid, std::string customTitle, bool force) {
+ReturnResult* Builder::buildCIA(std::string filename, bool randomTid, std::string customTitle, bool force) {
 
 //    const u16 contentCount = 1;
     // GET RANDOM CONTENT ID
     u8 contentID[4]={0x00,0x02,0x03,0x04};
     PS_GenerateRandomBytes(contentID+1,3);
-
-    this->sections["content"] = buildSRL(filename, randomTid, customTitle, force);
-    if (this->sections["content"].size() == 0) {
+    ReturnResult* srlResult = buildSRL(filename, randomTid, customTitle, force);
+    if (!srlResult->isSuccess()) {
         logger.error(gLang.getString("builder_fail"));
-        return -1;
+        return srlResult;
     }
+    this->sections["content"] = srlResult->message;
+    delete srlResult;
 	std::string srlSha = sha256( (u8*)this->sections["content"].c_str(), this->sections["content"].size());
-    this->sections["ticket"]=buildTicket(filename);
-    this->sections["tmd"]=this->buildTMD(contentID);
+    ReturnResult* ticketResult =buildTicket(filename);
+    if (!ticketResult->isSuccess()) {
+        logger.error(gLang.getString("builder_fail"));
+        return ticketResult;
+    }
+    this->sections["ticket"]=ticketResult->message;
+    delete ticketResult;
+    ReturnResult* tmdResult = this->buildTMD(contentID);
+    if (!tmdResult->isSuccess()) {
+        logger.error(gLang.getString("builder_fail"));
+        return tmdResult;
+    }
+    this->sections["tmd"]=tmdResult->message;
+    delete tmdResult;
     
     sCiaHeader header={};
     header.certchainSize = this->ciaCertChain.size();
@@ -357,8 +390,9 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
 
 	Result ret = AM_StartCiaInstall(MEDIATYPE_NAND, &ciaInstallFileHandle);
     if (R_FAILED(ret)) {
-        logger.error(gLang.parseString("builder_ErrInRet","AM_StartCiaInstall",ret));
-        return ret;
+        std::string message = gLang.parseString("builder_ErrInRet","AM_StartCiaInstall",ret);
+        logger.error(message);
+        return new ReturnResult(ret,message);
 	}
     logger.debug(gLang.getString("debug_writingToFile"));
 	do {
@@ -366,24 +400,26 @@ Result Builder::buildCIA(std::string filename, bool randomTid, std::string custo
             size=installSize;
 		ret = FSFILE_Write(ciaInstallFileHandle, &bytes_written, installOffset, cia.c_str(), size, FS_WRITE_FLUSH);
         if (R_FAILED(ret)) {
-            logger.error(gLang.parseString("builder_ErrInRet","writing to file",ret));
+            std::string message = gLang.parseString("builder_ErrInRet","writing to file",ret);
+            logger.error(message);
             AM_CancelCIAInstall(ciaInstallFileHandle);
-            return ret;
+            return new ReturnResult(ret,message);
         }
 		installOffset += bytes_written;
 	} while(installOffset < installSize);
     logger.debug(gLang.getString("debug_done"));
 	ret = AM_FinishCiaInstall(ciaInstallFileHandle);
 	if (R_FAILED(ret)) {
-		logger.error(gLang.parseString("builder_ErrInRet","AM_FinishCiaInstall",ret));
-		return ret;
+        std::string message = gLang.parseString("builder_ErrInRet","AM_FinishCiaInstall",ret);
+		logger.error(message);
+		return new ReturnResult(ret,message);
 	}
     logger.debug(gLang.getString("debug_installedForwarder"));
     
-return 0;
+return new ReturnResult(ERROR_SUCCESS,"");
 }
 
-std::string Builder::buildTicket(std::string filename) {
+ReturnResult* Builder::buildTicket(std::string filename) {
 
     std::string hash = sha256((u8*)filename.c_str(),filename.size());
 
@@ -415,9 +451,9 @@ std::string Builder::buildTicket(std::string filename) {
     // who needs a real signature either
     // sigpatches ftw
     sig.signature[0x100-1]=1;
-    return (std::string((char*)&sig,sizeof(sig))+std::string((char*)&header,sizeof(header)));
+    return new ReturnResult(0,(std::string((char*)&sig,sizeof(sig))+std::string((char*)&header,sizeof(header))));
 }
-std::string Builder::buildTMD(u8* contentId) {
+ReturnResult* Builder::buildTMD(u8* contentId) {
     
     static const u8 sig_type[4] =  { 0x00,0x01,0x00,0x04 };
 
@@ -459,7 +495,7 @@ std::string Builder::buildTMD(u8* contentId) {
     tmdSection += std::string((char*)&tmd,sizeof(tmd));
     tmdSection += std::string((char*)infoRecords,sizeof(sContentInfoRecord)*64);
     tmdSection += std::string((char*)&contentChunkRecord,sizeof(contentChunkRecord));
-    return tmdSection;
+    return new ReturnResult(0,tmdSection);
 }
 std::string Builder::getTWLTID(u8* srl) {
     u8 twltitle[8]={0x00,0x04,0x80,0x00,0x00,0x00,0x00,0x00};

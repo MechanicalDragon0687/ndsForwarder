@@ -1,7 +1,7 @@
 #pragma once
 
-#define VERSION "v1.4.4"
-#define DEBUG 1
+#define VERSION "v1.4.5"
+#define DEBUG 0
 
 #define FORWARDER_DIR std::string("sdmc:/3ds/forwarder")
 #define SDCARD_TEMPLATE_DIR FORWARDER_DIR+std::string("/templates/")

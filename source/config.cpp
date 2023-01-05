@@ -71,7 +71,7 @@ void Config::interact(touchPosition *touch) {
         touch->py >= MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+160 && touch->py <= MENU_BORDER_HEIGHT+MENU_HEADING_HEIGHT+170) {
             if (this->currentTemplate > 0)
                 this->currentTemplate--;
-            else
+            else if(this->templates.size() > 0)
                 this->currentTemplate=this->templates.size()-1;
     }
     if (touch->px >= MENU_BORDER_HEIGHT+25 && touch->px <= MENU_BORDER_HEIGHT+35 &&
