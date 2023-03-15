@@ -387,8 +387,19 @@ ReturnResult* Builder::buildCIA(std::string filename, bool randomTid, std::strin
     u32 installSize = cia.size(), installOffset = 0;
 	u32 bytes_written = 0;
     u32 size = cia.size();
-
-	Result ret = AM_StartCiaInstall(MEDIATYPE_NAND, &ciaInstallFileHandle);
+    AM_TWLPartitionInfo info;
+    Result ret = AM_GetTWLPartitionInfo(&info);
+    if (R_FAILED(ret)) {
+        std::string message = gLang.parseString("builder_ErrInRet","AM_GetTWLPartitionInfo",ret);
+        logger.error(message);
+        return new ReturnResult(ret,message);
+    }
+    if (info.titlesFreeSpace < size) {
+        std::string message = gLang.getString("builder_noSpace");
+        logger.error(message);
+        return new ReturnResult(ERROR_NOT_ENOUGH_SPACE,message);
+    }
+	ret = AM_StartCiaInstall(MEDIATYPE_NAND, &ciaInstallFileHandle);
     if (R_FAILED(ret)) {
         std::string message = gLang.parseString("builder_ErrInRet","AM_StartCiaInstall",ret);
         logger.error(message);
@@ -396,8 +407,9 @@ ReturnResult* Builder::buildCIA(std::string filename, bool randomTid, std::strin
 	}
     logger.debug(gLang.getString("debug_writingToFile"));
 	do {
-        if (size > installSize)
+        if (size > installSize) {
             size=installSize;
+        }
 		ret = FSFILE_Write(ciaInstallFileHandle, &bytes_written, installOffset, cia.c_str(), size, FS_WRITE_FLUSH);
         if (R_FAILED(ret)) {
             std::string message = gLang.parseString("builder_ErrInRet","writing to file",ret);

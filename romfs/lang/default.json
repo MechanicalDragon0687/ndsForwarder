@@ -23,6 +23,7 @@
     "builder_ErrIn":"Error in:%s\n%s",
     "builder_invalidBannerCRC":"Invalid banner CRC %s",
     "builder_invalidROMType":"Invalid ROM Type. Only NDS/DSI game roms are fully supported.",
+    "builder_noSpace":"Not Enough Space on System",
 
     "config_foundTemplate":"Found %s on %s",
     "config_searchTemplates":"Checking %s for templates",
