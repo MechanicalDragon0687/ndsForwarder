@@ -24,7 +24,7 @@ Thanks to Evie also for some code cleanup/proper handling of non-ascii strings
 
 Thanks to Oreo639, Piepie62, Fenrir, and everyone else who helped me in my development career.
 
-Thanks to lifehackerhansol, GanonTheDork for helping me test
+Thanks to lifehackerhansol, AnemoMETA, and GanonTheDork for helping me test
 
 Finally, thanks to the DevKitPro team for the toolchain (wintermute et al). Without that, homebrew just wouldn't be a thing.
 
