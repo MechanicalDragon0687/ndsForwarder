@@ -1,6 +1,6 @@
 name=DSi/3DS SD Card
-gamepath_location=0x1D6A4
+gamepath_location=0x1DD74
 gamepath_length=252
-banner_location=0x2CA00
+banner_location=0x29E00
 generate_dat=false
-version=30
+version=31
