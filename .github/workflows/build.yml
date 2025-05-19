@@ -1,0 +1,27 @@
+name: Build 3dsx
+
+on:  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      VERSTRING: ${{ steps.verstring.outputs.VERSTRING }}
+    container:
+      image: devkitpro/devkitarm
+      options: --user 1001
+    steps:
+    - uses: actions/checkout@v4
+    - name: build
+      run: |
+            make TARGET=ndsForwarder
+            mkdir -p build_output
+            cp -t build_output ndsForwarder.3dsx ndsForwarder.smdh
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4.6.2
+      with:
+        name: ndsForwarder
+        path: build_output
+        retention-days: 90
+        overwrite: true
+        
